@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, Search, Camera, ArrowRight } from 'lucide-react';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (searchOpen) setSearchOpen(false);
+        if (menuOpen) setMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchOpen, menuOpen]);
 
   const menuItems = [
     {
@@ -166,7 +177,7 @@ export default function Navbar() {
             borderTop: '1px solid var(--color-graphite-border)'
           }}
         >
-          <div className="lambo-container" style={{ padding: 0 }}>
+          <div className="defender-container lambo-container" style={{ padding: 0 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '48px' }}>
               {menuItems.map((sec, idx) => (
                 <div key={idx}>

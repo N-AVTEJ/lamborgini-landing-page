@@ -1,4 +1,4 @@
-/* Lamborghini Design System Tokens & Base Styles */
+/* Land Rover Defender Design System Tokens & Base Styles */
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400&family=Bebas+Neue&family=Rajdhani:wght@400&display=swap');
 
 :root {
@@ -16,7 +16,8 @@
   --color-anvil: #313131;
 
   /* Typography — Font Families */
-  --font-lambotype: 'LamboType', 'Barlow Condensed', 'Rajdhani', 'Bebas Neue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-defendertype: 'LamboType', 'Barlow Condensed', 'Rajdhani', 'Bebas Neue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-lambotype: var(--font-defendertype);
   --font-open-sans: 'Open Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
@@ -122,8 +123,8 @@ body {
 }
 
 /* Typography Headings */
-h1, h2, h3, h4, h5, h6, .lambo-heading {
-  font-family: var(--font-lambotype);
+h1, h2, h3, h4, h5, h6, .defender-heading, .lambo-heading {
+  font-family: var(--font-defendertype, var(--font-lambotype));
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.0230em;
@@ -134,14 +135,14 @@ h1, h2, h3, h4, h5, h6, .lambo-heading {
 a {
   color: inherit;
   text-decoration: none;
-  font-family: var(--font-lambotype);
+  font-family: var(--font-defendertype, var(--font-lambotype));
   letter-spacing: 0.0230em;
   text-transform: uppercase;
   transition: opacity 0.2s ease, color 0.2s ease;
 }
 
 button {
-  font-family: var(--font-lambotype);
+  font-family: var(--font-defendertype, var(--font-lambotype));
   letter-spacing: 0.0230em;
   text-transform: uppercase;
   font-weight: 400;
@@ -160,6 +161,7 @@ img, video {
 }
 
 /* Container */
+.defender-container,
 .lambo-container {
   width: 100%;
   max-width: var(--page-max-width);
@@ -170,6 +172,7 @@ img, video {
 }
 
 @media (max-width: 768px) {
+  .defender-container,
   .lambo-container {
     padding-left: var(--spacing-16);
     padding-right: var(--spacing-16);
@@ -203,6 +206,7 @@ img, video {
 }
 
 /* Specific Section Heading Block (Signature Pattern) */
+.defender-section-header,
 .lambo-section-header {
   display: flex;
   justify-content: space-between;
@@ -213,6 +217,7 @@ img, video {
   border: none;
 }
 
+.defender-section-header .section-title,
 .lambo-section-header .section-title {
   font-size: var(--text-display);
   line-height: var(--leading-display);
@@ -221,6 +226,7 @@ img, video {
   text-transform: uppercase;
 }
 
+.defender-section-header .section-action,
 .lambo-section-header .section-action {
   font-size: 12px;
   line-height: 1.5;
@@ -233,11 +239,13 @@ img, video {
   border-bottom: 1px solid transparent;
 }
 
+.defender-section-header .section-action:hover,
 .lambo-section-header .section-action:hover {
   border-bottom-color: currentColor;
 }
 
 @media (max-width: 768px) {
+  .defender-section-header,
   .lambo-section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -245,6 +253,7 @@ img, video {
     padding-top: var(--spacing-48);
     padding-bottom: var(--spacing-48);
   }
+  .defender-section-header .section-title,
   .lambo-section-header .section-title {
     font-size: var(--text-heading-lg);
   }
@@ -370,15 +379,23 @@ img, video {
   background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.12) 35%, rgba(0, 0, 0, 0) 75%);
   clip-path: polygon(30% 0%, 70% 0%, 95% 100%, 5% 100%);
   z-index: 2;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease, background 0.5s ease;
 }
 
+.showroom-spotlight-beam.theater,
 .showroom-spotlight-beam.dramatic {
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0) 80%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.18) 35%, rgba(0, 0, 0, 0) 75%);
+  opacity: 1;
+}
+
+.showroom-spotlight-beam.ambient {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 192, 0, 0.18) 0%, rgba(255, 255, 255, 0.08) 40%, rgba(0, 0, 0, 0) 80%);
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  opacity: 0.85;
 }
 
 .showroom-spotlight-beam.stealth {
-  opacity: 0.15;
+  opacity: 0.12;
 }
 
 /* Floor reflection overlay */
