@@ -73,6 +73,7 @@ export default function StoryGridSection() {
           {editorialStories.map((story) => (
             <article
               key={story.id}
+              className="story-card-interactive"
               style={{
                 backgroundColor: 'transparent',
                 border: 'none',

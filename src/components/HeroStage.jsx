@@ -51,7 +51,7 @@ export default function HeroStage() {
         paddingTop: '64px' // navbar offset
       }}
     >
-      {/* Background Cinematic Imagery with 0px radius */}
+      {/* Background Cinematic Imagery with 0px radius & subtle Ken Burns drift */}
       {heroSlides.map((item, index) => (
         <div
           key={item.id}
@@ -62,7 +62,8 @@ export default function HeroStage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: index === currentSlide ? 1 : 0,
-            transition: 'opacity 0.8s ease-in-out',
+            transform: index === currentSlide ? 'scale(1.035)' : 'scale(1.0)',
+            transition: 'opacity 0.8s ease-in-out, transform 6s cubic-bezier(0.16, 1, 0.3, 1)',
             zIndex: 1
           }}
         >
@@ -71,7 +72,7 @@ export default function HeroStage() {
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to right, rgba(24, 24, 24, 0.85) 0%, rgba(24, 24, 24, 0.4) 45%, rgba(0, 0, 0, 0.2) 100%), linear-gradient(to top, rgba(24, 24, 24, 0.95) 0%, transparent 40%)'
+              background: 'linear-gradient(to right, rgba(24, 24, 24, 0.88) 0%, rgba(24, 24, 24, 0.42) 48%, rgba(0, 0, 0, 0.2) 100%), linear-gradient(to top, rgba(24, 24, 24, 0.96) 0%, transparent 40%)'
             }}
           />
         </div>
@@ -97,8 +98,8 @@ export default function HeroStage() {
             gap: '32px'
           }}
         >
-          {/* Content Column: Max 50% viewport width */}
-          <div style={{ maxWidth: '640px', width: '100%' }}>
+          {/* Content Column: Max 50% viewport width with sleek reveal */}
+          <div key={slide.id} className="animate-monolithic-reveal" style={{ maxWidth: '640px', width: '100%' }}>
             {/* Eyebrow Label: 12-16px Defender Condensed UPPERCASE */}
             <div
               style={{
@@ -167,7 +168,7 @@ export default function HeroStage() {
               paddingBottom: '8px'
             }}
           >
-            {/* Horizontal short lines (active + inactive at ~40px width, 1–2px height, #ffffff, spacing 24px) */}
+            {/* Horizontal short lines with hairline precision */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
               {heroSlides.map((_, idx) => (
                 <button
@@ -175,16 +176,27 @@ export default function HeroStage() {
                   onClick={() => setCurrentSlide(idx)}
                   aria-label={`Go to slide ${idx + 1}`}
                   style={{
+                    position: 'relative',
                     width: '40px',
                     height: '2px',
-                    backgroundColor: 'var(--color-pearl-white)',
-                    opacity: idx === currentSlide ? 1 : 0.35,
+                    backgroundColor: 'rgba(255, 255, 255, 0.35)',
                     border: 'none',
                     padding: 0,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.25s ease'
+                    cursor: 'pointer'
                   }}
-                />
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      width: idx === currentSlide ? '100%' : '0%',
+                      backgroundColor: 'var(--color-pearl-white)',
+                      transition: 'width 0.4s ease'
+                    }}
+                  />
+                </button>
               ))}
             </div>
 

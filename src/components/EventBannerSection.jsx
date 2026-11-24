@@ -49,7 +49,7 @@ export default function EventBannerSection() {
                 textTransform: 'uppercase'
               }}
             >
-              <Trophy size={16} color="var(--color-steel-mid)" />
+              <Trophy size={16} color="var(--color-giallo-vivo)" />
               <span>OFFICIAL DEFENDER EXPEDITION TROPHY</span>
             </div>
 
@@ -100,10 +100,10 @@ export default function EventBannerSection() {
             </div>
           </div>
 
-          {/* Right Side: Expedition destinations */}
+          {/* Right Side: Expedition destinations with hairline hover feedback */}
           <div
             style={{
-              backgroundColor: 'rgba(24, 24, 24, 0.78)',
+              backgroundColor: 'rgba(24, 24, 24, 0.82)',
               border: '1px solid var(--color-graphite-border)',
               padding: 'var(--spacing-32)'
             }}
