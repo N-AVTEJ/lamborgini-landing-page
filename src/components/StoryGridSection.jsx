@@ -39,9 +39,9 @@ export default function StoryGridSection() {
         color: 'var(--color-carbony-black)'
       }}
     >
-      <div className="lambo-container">
+      <div className="defender-container lambo-container">
         {/* Signature Section Heading Block on #ffffff */}
-        <div className="lambo-section-header">
+        <div className="defender-section-header lambo-section-header">
           <div>
             <div
               style={{

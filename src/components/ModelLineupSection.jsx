@@ -34,13 +34,35 @@ const modelList = [
     accel: '5.2 S',
     image: '/images/defender-90-studio.jpg',
     descriptor: 'COMPACT THREE-DOOR CHASSIS WITH EXCEPTIONAL BREAKOVER ANGLE AND SUPERCHARGED MUSCLE'
+  },
+  {
+    id: 'defender-130',
+    category: 'DEFENDER 130',
+    tag: '8-PASSENGER EXPEDITION',
+    name: 'DEFENDER 130 OUTBOUND',
+    hp: '500 PS',
+    speed: '220 KM/H',
+    accel: '5.7 S',
+    image: '/images/defender-130-outbound.jpg',
+    descriptor: 'EXPANDED 8-PASSENGER ADVENTURE VEHICLE WITH 2,516 LITERS CARGO CAPACITY AND OVERLAND GEAR SYSTEM'
+  },
+  {
+    id: 'defender-trophy',
+    category: 'DEFENDER TROPHY',
+    tag: 'LIMITED WORKS EXPEDITION',
+    name: 'DEFENDER WORKS TROPHY',
+    hp: '405 PS',
+    speed: '170 KM/H',
+    accel: '5.6 S',
+    image: '/images/defender-rally-expedition.jpg',
+    descriptor: 'PURPOSE-BUILT LIMITED WORKS V8 EXPEDITION RECREATION WITH INTEGRATED WINCH AND UNDERBODY ARMOR'
   }
 ];
 
 export default function ModelLineupSection({ onSelectModel }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
 
-  const filters = ['ALL', 'DEFENDER OCTA', 'DEFENDER 110', 'DEFENDER 90'];
+  const filters = ['ALL', 'DEFENDER OCTA', 'DEFENDER 110', 'DEFENDER 90', 'DEFENDER 130', 'DEFENDER TROPHY'];
 
   const displayedModels = activeFilter === 'ALL'
     ? modelList
@@ -56,9 +78,9 @@ export default function ModelLineupSection({ onSelectModel }) {
         color: 'var(--color-carbony-black)'
       }}
     >
-      <div className="lambo-container">
+      <div className="defender-container lambo-container">
         {/* Signature Section Heading Block */}
-        <div className="lambo-section-header">
+        <div className="defender-section-header lambo-section-header">
           <div>
             <div
               style={{

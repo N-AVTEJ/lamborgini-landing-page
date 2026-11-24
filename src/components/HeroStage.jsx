@@ -79,7 +79,7 @@ export default function HeroStage() {
 
       {/* Main Content Stage: Left-aligned column, max 50% width */}
       <div
-        className="lambo-container"
+        className="defender-container lambo-container"
         style={{
           position: 'relative',
           zIndex: 10,
@@ -99,7 +99,7 @@ export default function HeroStage() {
         >
           {/* Content Column: Max 50% viewport width */}
           <div style={{ maxWidth: '640px', width: '100%' }}>
-            {/* Eyebrow Label: 12-16px LamboType UPPERCASE */}
+            {/* Eyebrow Label: 12-16px Defender Condensed UPPERCASE */}
             <div
               style={{
                 fontSize: '14px',

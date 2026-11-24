@@ -79,9 +79,9 @@ export default function ShowroomSpotlightStage() {
       {/* Downward Theatrical Overhead Spotlight Beam */}
       <div className={`showroom-spotlight-beam ${spotlightMode}`} />
 
-      <div className="lambo-container" style={{ position: 'relative', zIndex: 10 }}>
+      <div className="defender-container lambo-container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Section Heading Block — Dark Stage Variant */}
-        <div className="lambo-section-header" style={{ paddingTop: 0 }}>
+        <div className="defender-section-header lambo-section-header" style={{ paddingTop: 0 }}>
           <div>
             <div
               style={{

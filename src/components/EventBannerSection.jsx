@@ -5,7 +5,7 @@ import { ArrowRight, Trophy } from 'lucide-react';
  * Event Banner Component
  * Role: Promotional or event announcement band
  * Lighter photographic background with overlay text block at left.
- * Headline at 54–80px LamboType uppercase white, supporting body at 16–18px uppercase white,
+ * Headline at 54–80px uppercase white, supporting body at 16–18px uppercase white,
  * then a Giallo CTA button below. Right side: implicit photographic content.
  * Padding: 40px top/bottom.
  */
@@ -26,7 +26,7 @@ export default function EventBannerSection() {
         borderBottom: '1px solid var(--color-graphite-border)'
       }}
     >
-      <div className="lambo-container">
+      <div className="defender-container lambo-container">
         <div
           style={{
             display: 'grid',
