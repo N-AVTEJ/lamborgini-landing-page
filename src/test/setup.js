@@ -8,6 +8,25 @@ class MockAudioContext {
     this.destination = {};
   }
   resume() { return Promise.resolve(); }
+  decodeAudioData(_arrayBuffer) {
+    return Promise.resolve({
+      duration: 4.0,
+      sampleRate: 44100,
+      numberOfChannels: 2,
+      length: 176400
+    });
+  }
+  createBufferSource() {
+    return {
+      buffer: null,
+      loop: false,
+      connect: () => {},
+      disconnect: () => {},
+      start: () => {},
+      stop: () => {},
+      onended: null
+    };
+  }
   createGain() {
     return {
       gain: {

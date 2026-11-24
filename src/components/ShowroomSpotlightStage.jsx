@@ -5,12 +5,14 @@ import { defenderV8Engine } from '../utils/engineAudio';
 // Smooth Count-Up Telemetry Metric Component
 function TelemetryCard({ label, unit, subtext, targetNumber, decimals = 0 }) {
   const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
-  const [displayNumber, setDisplayNumber] = useState(isTest ? targetNumber : 0);
+  const prefersReducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  const shouldSkipAnimation = isTest || prefersReducedMotion;
+  const [displayNumber, setDisplayNumber] = useState(shouldSkipAnimation ? targetNumber : 0);
   const cardRef = useRef(null);
-  const [hasAnimated, setHasAnimated] = useState(isTest);
+  const [hasAnimated, setHasAnimated] = useState(shouldSkipAnimation);
 
   useEffect(() => {
-    if (isTest || hasAnimated) return;
+    if (shouldSkipAnimation || hasAnimated) return;
 
     let animId;
     const startVal = 0;
@@ -56,7 +58,7 @@ function TelemetryCard({ label, unit, subtext, targetNumber, decimals = 0 }) {
         if (animId) cancelAnimationFrame(animId);
       };
     }
-  }, [targetNumber, isTest, hasAnimated]);
+  }, [targetNumber, isTest, hasAnimated, shouldSkipAnimation]);
 
   const formattedNum = isTest
     ? (decimals === 1 ? targetNumber.toFixed(1) : targetNumber.toLocaleString())
@@ -106,6 +108,7 @@ export default function ShowroomSpotlightStage() {
 
   // Dynamic Spotlight Beam mouse follow & ambient drift
   const [beamPos, setBeamPos] = useState({ x: 50, tilt: 0 });
+  const beamPosRef = useRef({ x: 50, tilt: 0 });
   const [isHoveringStage, setIsHoveringStage] = useState(false);
   const stageRef = useRef(null);
 
@@ -131,12 +134,20 @@ export default function ShowroomSpotlightStage() {
   useEffect(() => {
     if (isHoveringStage) return;
     let animId;
+    const startX = beamPosRef.current.x;
+    const startTilt = beamPosRef.current.tilt;
     const start = performance.now();
     const driftLoop = (now) => {
       const elapsed = (now - start) / 1000;
-      const x = 50 + Math.sin(elapsed * 0.7) * 6;
-      const tilt = Math.sin(elapsed * 0.7) * 2.5;
-      setBeamPos({ x, tilt });
+      // Smoothly blend from where cursor exited toward the center oscillation
+      const blend = Math.min(1, elapsed / 1.2);
+      const targetX = 50 + Math.sin(elapsed * 0.7) * 6;
+      const targetTilt = Math.sin(elapsed * 0.7) * 2.5;
+      const x = startX + (targetX - startX) * blend;
+      const tilt = startTilt + (targetTilt - startTilt) * blend;
+      const current = { x, tilt };
+      beamPosRef.current = current;
+      setBeamPos(current);
       animId = requestAnimationFrame(driftLoop);
     };
     animId = requestAnimationFrame(driftLoop);
@@ -148,7 +159,9 @@ export default function ShowroomSpotlightStage() {
     const rect = stageRef.current.getBoundingClientRect();
     const x = Math.max(15, Math.min(85, ((e.clientX - rect.left) / rect.width) * 100));
     const tilt = ((x - 50) / 35) * 12; // tilt between -12deg and +12deg
-    setBeamPos({ x, tilt });
+    const nextPos = { x, tilt };
+    beamPosRef.current = nextPos;
+    setBeamPos(nextPos);
     setIsHoveringStage(true);
   };
 
@@ -187,6 +200,7 @@ export default function ShowroomSpotlightStage() {
   };
 
   useEffect(() => {
+    defenderV8Engine.preloadAudioClips();
     return () => {
       defenderV8Engine.stop();
     };
@@ -379,36 +393,39 @@ export default function ShowroomSpotlightStage() {
 
                 {/* 16-Segment Tachometer Visualizer with Peak Hold Needle */}
                 <div style={{ display: 'flex', alignItems: 'flex-end', height: '20px', gap: '3px', marginTop: '4px' }}>
-                  {[...Array(16)].map((_, i) => {
-                    const threshold = 650 + i * 410;
-                    const isActive = currentRPM >= threshold;
-                    const isPeak = peakRPM >= threshold && peakRPM < threshold + 410;
-                    const isRedlineZone = i >= 13;
+                  {(() => {
+                    const peakIndex = peakRPM > 0 ? Math.min(15, Math.floor(Math.max(0, peakRPM - 650) / 410)) : -1;
+                    return [...Array(16)].map((_, i) => {
+                      const threshold = 650 + i * 410;
+                      const isActive = currentRPM >= threshold;
+                      const isPeak = i === peakIndex;
+                      const isRedlineZone = i >= 13;
 
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          position: 'relative',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-end',
-                          height: '100%'
-                        }}
-                      >
-                        {isPeak && <div className="peak-hold-marker" />}
-                        <span
-                          className={`tach-bar ${isActive ? 'active' : ''}`}
+                      return (
+                        <div
+                          key={i}
                           style={{
-                            backgroundColor: isRedlineZone ? 'var(--color-giallo-vivo)' : 'var(--color-pearl-white)',
-                            height: isActive ? `${6 + (i * 0.9)}px` : '4px',
-                            opacity: isActive ? 1 : 0.25,
-                            marginRight: 0
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            height: '100%'
                           }}
-                        />
-                      </div>
-                    );
-                  })}
+                        >
+                          {isPeak && <div className="peak-hold-marker" />}
+                          <span
+                            className={`tach-bar ${isActive ? 'active' : ''}`}
+                            style={{
+                              backgroundColor: isRedlineZone ? 'var(--color-giallo-vivo)' : 'var(--color-pearl-white)',
+                              height: isActive ? `${6 + (i * 0.9)}px` : '4px',
+                              opacity: isActive ? 1 : 0.25,
+                              marginRight: 0
+                            }}
+                          />
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
 
                 <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginTop: '6px' }}>

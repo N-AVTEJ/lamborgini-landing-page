@@ -13,6 +13,7 @@ import StoryGridSection from '../components/StoryGridSection';
 import FullBleedEditorialImage from '../components/FullBleedEditorialImage';
 import EventBannerSection from '../components/EventBannerSection';
 import Footer from '../components/Footer';
+import { defenderV8Engine } from '../utils/engineAudio';
 
 describe('Defender Design Tokens & CSS Specification', () => {
   const cssPath = path.resolve(__dirname, '../index.css');
@@ -264,13 +265,17 @@ describe('Showroom Spotlight Stage — "Showroom black with one yellow car under
   });
 
   it('renders authentic audio HUD telemetry and active sport exhaust when engine is ignited', () => {
-    render(<ShowroomSpotlightStage />);
+    const { container } = render(<ShowroomSpotlightStage />);
     const startBtn = screen.getByRole('button', { name: /IGNITE DEFENDER V8 \(START\)/i });
     fireEvent.click(startBtn);
 
     expect(screen.getByText('4.4L TWIN-TURBO V8 TELEMETRY')).toBeInTheDocument();
     expect(screen.getByText(/ACTIVE SPORT EXHAUST: QUAD VALVES UNLEASHED/i)).toBeInTheDocument();
     expect(screen.getByText(/PEAK:/i)).toBeInTheDocument();
+
+    // Verify peak hold marker remains visible when engine is active
+    const peakMarker = container.querySelector('.peak-hold-marker');
+    expect(peakMarker).toBeInTheDocument();
 
     const stopBtn = screen.getByRole('button', { name: /SHUTDOWN DEFENDER V8 \(STOP\)/i });
     fireEvent.click(stopBtn);
@@ -300,8 +305,40 @@ describe('Authentic Land Rover Defender Audio Assets', () => {
       const buffer = fs.readFileSync(fullPath);
       expect(buffer.toString('ascii', 0, 4)).toBe('RIFF');
       expect(buffer.toString('ascii', 8, 12)).toBe('WAVE');
-      expect(buffer.length).toBeGreaterThan(100000); // substantial authentic sound recording
+      expect(buffer.readUInt16LE(22)).toBe(2); // Stereo
+      expect(buffer.readUInt32LE(24)).toBe(44100); // 44.1kHz high-fidelity
+      expect(buffer.readUInt16LE(34)).toBe(16); // 16-bit PCM
+      expect(buffer.length).toBeGreaterThan(600000); // substantial studio recording (>600 KB)
     }
+  });
+
+  it('contains authentic Land Rover Defender digitized PCM sample archives', () => {
+    const jsonPath = path.resolve(__dirname, '../../scripts/defender-samples.json');
+    expect(fs.existsSync(jsonPath)).toBe(true);
+    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    expect(data.start.length).toBeGreaterThan(5000);
+    expect(data.openStart.length).toBeGreaterThan(15000);
+    expect(data.idle.length).toBeGreaterThan(3000);
+    expect(data.rev.length).toBeGreaterThan(3000);
+    expect(data.rev2.length).toBeGreaterThan(3000);
+    expect(data.knock.length).toBeGreaterThan(500);
+  });
+
+  it('initializes and controls Defender V8 Web Audio engine without oscillator collision', async () => {
+    let rpmReceived = 0;
+    await defenderV8Engine.startIdle((rpm) => {
+      rpmReceived = rpm;
+    });
+
+    expect(defenderV8Engine.isPlaying).toBe(true);
+    expect(rpmReceived).toBeGreaterThan(0);
+
+    defenderV8Engine.revEngine();
+    expect(defenderV8Engine.isRevving).toBe(true);
+
+    defenderV8Engine.stop();
+    expect(defenderV8Engine.isPlaying).toBe(false);
+    expect(defenderV8Engine.currentRPM).toBe(0);
   });
 });
 

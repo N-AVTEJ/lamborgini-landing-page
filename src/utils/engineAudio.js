@@ -1,7 +1,8 @@
-// Authentic Web Audio System & Recorded Engine Audio for Land Rover Defender V8 (OCTA / Supercharged V8)
+// Authentic Web Audio System & Real Recorded Engine Audio for Land Rover Defender V8 (OCTA / Supercharged V8)
 class DefenderV8EngineSynthesizer {
   constructor() {
     this.ctx = null;
+    this.masterGain = null;
     this.isPlaying = false;
     this.isRevving = false;
     this.currentRPM = 0;
@@ -9,8 +10,9 @@ class DefenderV8EngineSynthesizer {
     this.animFrameId = null;
     this.revAnimFrameId = null;
     this.stopTimeoutId = null;
+    this.preloadPromise = null;
 
-    // Recorded Audio Buffers for real Defender V8 sound
+    // Recorded Audio Buffers from authentic Land Rover Defender V8
     this.audioBuffers = {
       start: null,
       rev: null,
@@ -23,6 +25,11 @@ class DefenderV8EngineSynthesizer {
     };
     this.hasRecordedAudio = false;
     this.isPreloading = false;
+
+    // Start preloading immediately in browser environments
+    if (typeof window !== 'undefined') {
+      setTimeout(() => this.preloadAudioClips(), 0);
+    }
   }
 
   init() {
@@ -35,13 +42,26 @@ class DefenderV8EngineSynthesizer {
     if (this.ctx && this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
       this.ctx.resume().catch(() => {});
     }
-    this.preloadAudioClips();
+    if (!this.hasRecordedAudio && !this.isPreloading) {
+      this.preloadAudioClips();
+    }
   }
 
   // Preload authentic Land Rover Defender audio clips from /audio/ directory
-  async preloadAudioClips() {
-    if (this.isPreloading || this.hasRecordedAudio || !this.ctx) return;
-    if (typeof fetch !== 'function' || typeof this.ctx.decodeAudioData !== 'function') return;
+  preloadAudioClips() {
+    if (this.hasRecordedAudio) return Promise.resolve(true);
+    if (this.preloadPromise) return this.preloadPromise;
+
+    if (typeof window === 'undefined') return Promise.resolve(false);
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (!this.ctx || typeof fetch !== 'function' || typeof this.ctx.decodeAudioData !== 'function') {
+      return Promise.resolve(false);
+    }
 
     this.isPreloading = true;
     const audioFiles = [
@@ -50,28 +70,31 @@ class DefenderV8EngineSynthesizer {
       { key: 'idle', url: '/audio/defender-v8-idle.wav' }
     ];
 
-    try {
-      await Promise.all(
-        audioFiles.map(async ({ key, url }) => {
-          try {
-            const res = await fetch(url);
-            if (!res.ok) return;
-            const arrayBuffer = await res.arrayBuffer();
-            const decoded = await this.ctx.decodeAudioData(arrayBuffer);
-            this.audioBuffers[key] = decoded;
-          } catch {
-            // Gracefully fall back to acoustic synthesis
-          }
-        })
-      );
-      if (this.audioBuffers.start && this.audioBuffers.rev) {
-        this.hasRecordedAudio = true;
-      }
-    } catch {
-      // Gracefully fall back to acoustic synthesis
-    } finally {
-      this.isPreloading = false;
-    }
+    this.preloadPromise = Promise.all(
+      audioFiles.map(async ({ key, url }) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const arrayBuffer = await res.arrayBuffer();
+          const decoded = await this.ctx.decodeAudioData(arrayBuffer);
+          this.audioBuffers[key] = decoded;
+        } catch {
+          // Gracefully fall back to acoustic synthesis
+        }
+      })
+    )
+      .then(() => {
+        if (this.audioBuffers.start && this.audioBuffers.rev) {
+          this.hasRecordedAudio = true;
+        }
+        return this.hasRecordedAudio;
+      })
+      .catch(() => false)
+      .finally(() => {
+        this.isPreloading = false;
+      });
+
+    return this.preloadPromise;
   }
 
   // Generate distortion curve for deep V8 exhaust growl
@@ -87,7 +110,7 @@ class DefenderV8EngineSynthesizer {
     return curve;
   }
 
-  startIdle(onRPM) {
+  async startIdle(onRPM) {
     this.init();
     if (this.stopTimeoutId) {
       clearTimeout(this.stopTimeoutId);
@@ -103,13 +126,27 @@ class DefenderV8EngineSynthesizer {
       return;
     }
 
+    // Await preload if in-flight (up to 300ms window)
+    if (this.isPreloading && this.preloadPromise) {
+      try {
+        await Promise.race([
+          this.preloadPromise,
+          new Promise((resolve) => setTimeout(resolve, 300))
+        ]);
+      } catch {
+        // continue
+      }
+    }
+
+    if (!this.isPlaying) return; // in case stop was called during await
+
     const t = this.ctx.currentTime || 0;
 
     // Master Gain
     this.masterGain = this.ctx.createGain();
     if (this.masterGain && this.masterGain.gain && this.masterGain.gain.setValueAtTime) {
       this.masterGain.gain.setValueAtTime(0, t);
-      this.masterGain.gain.linearRampToValueAtTime(0.45, t + 0.4);
+      this.masterGain.gain.linearRampToValueAtTime(0.55, t + 0.35);
     }
     if (this.masterGain && this.ctx.destination && typeof this.masterGain.connect === 'function') {
       this.masterGain.connect(this.ctx.destination);
@@ -127,6 +164,13 @@ class DefenderV8EngineSynthesizer {
   playRecordedStartSequence() {
     const t = this.ctx.currentTime || 0;
     try {
+      // Disconnect any lingering acoustic synthesis oscillators
+      this.killAcousticOscillators();
+
+      // Set initial starter cranking RPM
+      this.currentRPM = 210;
+      if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
+
       // 1. Play Starter Crank + Ignition Audio Clip
       const startSrc = this.ctx.createBufferSource();
       startSrc.buffer = this.audioBuffers.start;
@@ -141,15 +185,15 @@ class DefenderV8EngineSynthesizer {
         const elapsed = (now - startTime) / 1000;
         if (elapsed < 0.85) {
           // Starter motor cranking pulses (180 - 240 RPM)
-          this.currentRPM = Math.round(200 + Math.sin(elapsed * 24) * 35);
-        } else if (elapsed < 1.4) {
+          this.currentRPM = Math.round(210 + Math.sin(elapsed * 24) * 35);
+        } else if (elapsed < 1.6) {
           // Ignition flare spike up to 1,450 RPM
-          const flareProgress = (elapsed - 0.85) / 0.55;
-          this.currentRPM = Math.round(220 + Math.sin(flareProgress * Math.PI * 0.85) * 1230);
-        } else if (elapsed < 3.2) {
+          const flareProgress = (elapsed - 0.85) / 0.75;
+          this.currentRPM = Math.round(230 + Math.sin(flareProgress * Math.PI * 0.85) * 1220);
+        } else if (elapsed < 3.4) {
           // Settling to idle
-          const settleProgress = (elapsed - 1.4) / 1.8;
-          this.currentRPM = Math.round(1450 - settleProgress * 700 + Math.sin(elapsed * 8) * 15);
+          const settleProgress = (elapsed - 1.6) / 1.8;
+          this.currentRPM = Math.round(1450 - settleProgress * 700 + Math.sin(elapsed * 8.5) * 14);
         } else {
           // Settled at idle (750 RPM)
           this.currentRPM = 750;
@@ -163,7 +207,8 @@ class DefenderV8EngineSynthesizer {
 
       // When start clip ends, loop recorded idle
       startSrc.onended = () => {
-        if (this.isPlaying && !this.isRevving && this.audioBuffers.idle) {
+        this.activeSources.start = null;
+        if (this.isPlaying && !this.isRevving && this.audioBuffers.idle && typeof this.ctx.createBufferSource === 'function') {
           try {
             const idleSrc = this.ctx.createBufferSource();
             idleSrc.buffer = this.audioBuffers.idle;
@@ -182,6 +227,8 @@ class DefenderV8EngineSynthesizer {
   }
 
   startAcousticSynthesis(t) {
+    this.killAcousticOscillators();
+
     // Distortion shaper for deep British V8 growl
     this.shaper = this.ctx.createWaveShaper();
     if (this.shaper) {
@@ -217,7 +264,7 @@ class DefenderV8EngineSynthesizer {
       this.osc2.frequency.setValueAtTime(27.5, t);
     }
 
-    // Third Osc for turbo induction whistle / supercharger whine (~110Hz)
+    // Third Osc for twin-turbo induction / supercharger whine (~110Hz)
     this.osc3 = this.ctx.createOscillator();
     this.osc3.type = 'sawtooth';
     if (this.osc3.frequency && this.osc3.frequency.setValueAtTime) {
@@ -234,7 +281,21 @@ class DefenderV8EngineSynthesizer {
     if (typeof this.osc3.start === 'function') this.osc3.start(t);
 
     this.currentRPM = 750;
+    if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
     this.startIdleLoop();
+  }
+
+  killAcousticOscillators() {
+    try {
+      if (this.osc1) { this.osc1.stop(); this.osc1.disconnect(); }
+      if (this.osc2) { this.osc2.stop(); this.osc2.disconnect(); }
+      if (this.osc3) { this.osc3.stop(); this.osc3.disconnect(); }
+    } catch {
+      // ignore
+    }
+    this.osc1 = null;
+    this.osc2 = null;
+    this.osc3 = null;
   }
 
   revEngine() {
@@ -243,7 +304,7 @@ class DefenderV8EngineSynthesizer {
     this.isRevving = true;
     const t = this.ctx.currentTime || 0;
 
-    // Check if recorded rev audio is available
+    // Check if real recorded rev audio is available
     if (this.hasRecordedAudio && this.audioBuffers.rev && typeof this.ctx.createBufferSource === 'function') {
       try {
         // Stop current idle loop if playing
@@ -259,8 +320,9 @@ class DefenderV8EngineSynthesizer {
         this.activeSources.rev = revSrc;
 
         revSrc.onended = () => {
+          this.activeSources.rev = null;
           this.isRevving = false;
-          if (this.isPlaying && this.audioBuffers.idle) {
+          if (this.isPlaying && this.audioBuffers.idle && typeof this.ctx.createBufferSource === 'function') {
             try {
               const idleSrc = this.ctx.createBufferSource();
               idleSrc.buffer = this.audioBuffers.idle;
@@ -274,10 +336,8 @@ class DefenderV8EngineSynthesizer {
       } catch {
         // Fall back to acoustic sweep
       }
-    }
-
-    // If using acoustic synthesis oscillators, schedule audio parameters
-    if (this.osc1 && this.osc1.frequency && this.osc1.frequency.cancelScheduledValues) {
+    } else if (this.osc1 && this.osc1.frequency && this.osc1.frequency.cancelScheduledValues) {
+      // Acoustic synthesis schedule ONLY when oscillators are active and recorded audio is not used
       this.osc1.frequency.cancelScheduledValues(t);
       this.osc2.frequency.cancelScheduledValues(t);
       this.osc3.frequency.cancelScheduledValues(t);
@@ -309,16 +369,16 @@ class DefenderV8EngineSynthesizer {
     const startT = performance.now();
     const animateRev = (now) => {
       const elapsed = (now - startT) / 1000;
-      if (elapsed < 0.75) {
+      if (elapsed < 0.85) {
         // Accelerating towards 7,200 RPM redline
-        this.currentRPM = Math.round(750 + Math.pow(elapsed / 0.75, 1.25) * 6450);
-      } else if (elapsed < 1.05) {
-        // Limiter bounce flutter (7,050 to 7,250 RPM)
-        this.currentRPM = Math.round(7100 + Math.sin(now / 20) * 120);
-      } else if (elapsed < 2.4) {
+        this.currentRPM = Math.round(750 + Math.pow(elapsed / 0.85, 1.35) * 6450);
+      } else if (elapsed < 1.25) {
+        // Limiter bounce flutter (7,060 to 7,240 RPM)
+        this.currentRPM = Math.round(7150 + Math.sin(now / 18) * 90);
+      } else if (elapsed < 2.8) {
         // Deceleration overrun return to idle
-        const decay = Math.min(1, (elapsed - 1.05) / 1.35);
-        this.currentRPM = Math.round(7200 - Math.pow(decay, 0.75) * 6450);
+        const decay = Math.min(1, (elapsed - 1.25) / 1.55);
+        this.currentRPM = Math.round(7200 - Math.pow(decay, 0.72) * 6450);
       } else {
         this.currentRPM = 750;
         this.isRevving = false;
@@ -334,24 +394,14 @@ class DefenderV8EngineSynthesizer {
   }
 
   stop() {
-    if (!this.isPlaying || !this.ctx) return;
+    if (!this.isPlaying) return;
     this.isPlaying = false;
     this.isRevving = false;
     if (this.stopTimeoutId) clearTimeout(this.stopTimeoutId);
     if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
     if (this.revAnimFrameId) cancelAnimationFrame(this.revAnimFrameId);
 
-    const t = this.ctx.currentTime || 0;
-    try {
-      if (this.masterGain && this.masterGain.gain && this.masterGain.gain.cancelScheduledValues) {
-        this.masterGain.gain.cancelScheduledValues(t);
-        this.masterGain.gain.linearRampToValueAtTime(0, t + 0.3);
-      }
-    } catch {
-      // fallback
-    }
-
-    // Stop recorded buffer sources
+    // Stop recorded buffer sources immediately
     Object.keys(this.activeSources).forEach((key) => {
       if (this.activeSources[key]) {
         try {
@@ -362,18 +412,20 @@ class DefenderV8EngineSynthesizer {
       }
     });
 
-    this.stopTimeoutId = setTimeout(() => {
+    this.killAcousticOscillators();
+
+    if (this.ctx) {
+      const t = this.ctx.currentTime || 0;
       try {
-        if (this.osc1) { this.osc1.stop(); this.osc1.disconnect(); }
-        if (this.osc2) { this.osc2.stop(); this.osc2.disconnect(); }
-        if (this.osc3) { this.osc3.stop(); this.osc3.disconnect(); }
-      } catch {
-        // ignore if already stopped
-      }
-      this.currentRPM = 0;
-      if (this.onRPMUpdate) this.onRPMUpdate(0);
-      this.stopTimeoutId = null;
-    }, 350);
+        if (this.masterGain && this.masterGain.gain && this.masterGain.gain.cancelScheduledValues) {
+          this.masterGain.gain.cancelScheduledValues(t);
+          this.masterGain.gain.linearRampToValueAtTime(0, t + 0.15);
+        }
+      } catch {}
+    }
+
+    this.currentRPM = 0;
+    if (this.onRPMUpdate) this.onRPMUpdate(0);
   }
 
   startIdleLoop() {
@@ -381,8 +433,8 @@ class DefenderV8EngineSynthesizer {
     const loop = () => {
       if (!this.isPlaying) return;
       if (!this.isRevving) {
-        // Subtle V8 idle flutter between 730 and 770 RPM
-        this.currentRPM = Math.round(750 + (Math.sin(Date.now() / 240) * 18));
+        // Subtle V8 idle flutter between 740 and 765 RPM
+        this.currentRPM = Math.round(750 + (Math.sin(Date.now() / 220) * 14));
         if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
       }
       this.animFrameId = requestAnimationFrame(loop);

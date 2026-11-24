@@ -512,6 +512,22 @@ img, video {
   border: 1px solid transparent;
 }
 
+.vehicle-tile-interactive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: var(--color-carbony-black);
+  transition: width 0.3s ease;
+  z-index: 4;
+}
+
+.vehicle-tile-interactive:hover::before {
+  width: 100%;
+}
+
 .vehicle-tile-interactive:hover {
   border-color: var(--color-graphite-border);
 }
