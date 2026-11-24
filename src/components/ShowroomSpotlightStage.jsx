@@ -112,6 +112,7 @@ export default function ShowroomSpotlightStage() {
   const [studioColor, setStudioColor] = useState('#ffc000');
   const [studioPresetId, setStudioPresetId] = useState('giallo-vivo');
   const [cockpitDoorPreload, setCockpitDoorPreload] = useState('metadata');
+  const [cockpitReplayTrigger, setCockpitReplayTrigger] = useState(0);
   const switchTimerRef = useRef(null);
 
   // Keep currentAngleRef in sync
@@ -395,6 +396,7 @@ export default function ShowroomSpotlightStage() {
               <CockpitSequence
                 isActive={currentAngle === 'cockpit'}
                 doorPreload={cockpitDoorPreload}
+                replayTrigger={cockpitReplayTrigger}
               />
             </div>
 
@@ -559,7 +561,12 @@ export default function ShowroomSpotlightStage() {
                 <button
                   key={angleKey}
                   onClick={() => {
-                    if (angleKey === 'cockpit') setCockpitDoorPreload('auto');
+                    if (angleKey === 'cockpit') {
+                      setCockpitDoorPreload('auto');
+                      if (currentAngle === 'cockpit') {
+                        setCockpitReplayTrigger((prev) => prev + 1);
+                      }
+                    }
                     handleSelectAngle(angleKey);
                   }}
                   onMouseEnter={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
