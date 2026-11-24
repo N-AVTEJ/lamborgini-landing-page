@@ -4,12 +4,12 @@ import React from 'react';
  * Full-Bleed Editorial Image
  * Role: Large product or lifestyle photograph
  * 100% width, 0px radius, no caption overlay. Photograph extends edge to edge of viewport.
- * Used for car close-ups (leather stitching, badges) and lifestyle shots (circuit, landscape).
+ * Used for car close-ups (tactical switchgear, badges) and lifestyle shots (desert rally, expedition).
  * The image does the talking — no frame, no shadow, no rounded corner.
  */
 export default function FullBleedEditorialImage({
-  image = '/images/interior-cockpit-macro.jpg',
-  alt = 'Automobili Lamborghini Aeronautical Cockpit Detail'
+  image = '/images/defender-rally-expedition.jpg',
+  alt = 'Land Rover Defender OCTA High-Speed Rally Raid Expedition'
 }) {
   return (
     <section

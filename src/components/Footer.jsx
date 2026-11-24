@@ -5,41 +5,41 @@ export default function Footer() {
     {
       title: 'MODEL FAMILIES',
       links: [
-        'REVUELTO V12 HPEV',
-        'TEMERARIO V8 HPEV',
-        'URUS SE HYBRID',
-        'HURACÁN STERRATO',
-        'COUNTACH LPI 800-4',
-        'FEW-OFF & CONCEPTS'
+        'DEFENDER OCTA V8',
+        'DEFENDER 110 EXPEDITION',
+        'DEFENDER 90 SHORT WHEELBASE',
+        'DEFENDER 130 OUTBOUND',
+        'DEFENDER WORKS V8 TROPHY',
+        'SV BESPOKE COMMISSIONS'
       ]
     },
     {
-      title: 'MOTORSPORT',
+      title: 'EXPEDITIONS & MOTORSPORT',
       links: [
-        'SC63 LMDH HYBRID',
-        'SUPER TROFEO EVO2',
-        'GT3 CUSTOMER RACING',
-        'ESPERIENZA CORSA',
-        'SQUADRA CORSE DRIVER PROGRAM'
+        'DEFENDER EXPEDITION TROPHY',
+        'DAKAR RALLY RAID PROGRAM',
+        'TERRAIN RESPONSE 2',
+        'ARCTIC POLAR TRIALS',
+        'LAND ROVER EXPERIENCE ACADEMY'
       ]
     },
     {
       title: 'HERITAGE & INNOVATION',
       links: [
-        'CENTRO STILE SANT\'AGATA',
-        'DIREZIONE COR TAURI',
-        'POLO STORICO ARCHIVE',
-        'MUSEO AUTOMOBILI LAMBORGHINI',
-        'CARBON MONOFUSELAGE LAB'
+        'SOLIHULL CLASSIC WORKS',
+        'D7X ALUMINUM MONOCOQUE',
+        '6D DYNAMICS LAB',
+        '75 YEARS HERITAGE ARCHIVE',
+        'SUSTAINABLE EXPLORATION ROADMAP'
       ]
     },
     {
       title: 'COMPANY & CONTACT',
       links: [
         'CORPORATE GOVERNANCE',
-        'DEALERSHIP LOCATOR',
-        'CAREERS & TALENT',
-        'PRESS & MEDIA CENTER',
+        'SPECIAL VEHICLE OPERATIONS',
+        'RETAILER LOCATOR',
+        'PRESS & MEDIA ASSETS',
         'SUSTAINABILITY REPORT 2026'
       ]
     }
@@ -71,22 +71,21 @@ export default function Footer() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {/* Bull Shield Vector */}
-            <svg width="32" height="38" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="50,2 96,18 86,102 50,118 14,102 4,18" stroke="#ffffff" strokeWidth="4" fill="#202020" />
-              <path
-                d="M32 38 C36 34, 44 32, 50 32 C56 32, 64 34, 68 38 C72 42, 70 48, 65 52 C61 55, 59 58, 63 64 C67 70, 71 78, 69 86 C67 92, 58 95, 50 95 C42 95, 33 92, 31 86 C29 78, 33 70, 37 64 C41 58, 39 55, 35 52 C30 48, 28 42, 32 38 Z"
-                fill="#ffffff"
-              />
-              <path d="M26 40 Q22 28 34 26 Q38 32 36 40 Z" fill="#ffffff" />
-              <path d="M74 40 Q78 28 66 26 Q62 32 64 40 Z" fill="#ffffff" />
+            {/* Defender Geometric Shield Vector */}
+            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="50,4 96,22 96,78 50,96 4,78 4,22" stroke="#ffffff" strokeWidth="4" fill="#202020" />
+              <rect x="22" y="32" width="56" height="36" stroke="#ffffff" strokeWidth="3.5" fill="none" />
+              <line x1="22" y1="50" x2="78" y2="50" stroke="#ffffff" strokeWidth="3" />
+              <line x1="42" y1="32" x2="42" y2="68" stroke="#ffffff" strokeWidth="3" />
+              <line x1="58" y1="32" x2="58" y2="68" stroke="#ffffff" strokeWidth="3" />
+              <circle cx="50" cy="50" r="3" fill="#ffc000" />
             </svg>
             <div>
-              <div style={{ fontSize: '18px', letterSpacing: '0.0230em', fontWeight: 400 }}>
-                AUTOMOBILI LAMBORGHINI S.P.A.
+              <div style={{ fontSize: '18px', letterSpacing: '0.08em', fontWeight: 400 }}>
+                LAND ROVER DEFENDER
               </div>
               <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                VIA MODENA, 12, 40019 SANT'AGATA BOLOGNESE BO, ITALY
+                LODE LANE, SOLIHULL, WEST MIDLANDS B92 8NW, UNITED KINGDOM
               </div>
             </div>
           </div>
@@ -175,7 +174,7 @@ export default function Footer() {
               letterSpacing: '0.0230em'
             }}
           >
-            Fuel consumption and emission figures for Revuelto: Combined Fuel Consumption: 10.3 l/100km; Combined Electrical Consumption: 10.1 kWh/100km; Combined CO2 Emissions: 276 g/km (WLTP). Fuel consumption figures for Temerario: Combined Fuel Consumption: 11.2 l/100km; Combined CO2 Emissions: 290 g/km (WLTP). Fuel consumption figures for Urus SE: Combined Fuel Consumption: 14.1 l/100km; Combined Electrical Consumption: 15.2 kWh/100km; Combined CO2 Emissions: 325 g/km (WLTP). Values are determined in accordance with the mandatory European measurement procedure.
+            Fuel consumption and emission figures for Defender OCTA: Combined Fuel Consumption: 11.5 l/100km; Combined CO2 Emissions: 262 g/km (WLTP). Fuel consumption figures for Defender 110 V8: Combined Fuel Consumption: 12.8 l/100km; Combined CO2 Emissions: 290 g/km (WLTP). Fuel consumption figures for Defender 90 V8: Combined Fuel Consumption: 12.6 l/100km; Combined CO2 Emissions: 285 g/km (WLTP). Values are determined in accordance with the mandatory European measurement procedure.
           </p>
         </div>
 
@@ -193,7 +192,7 @@ export default function Footer() {
           }}
         >
           <div>
-            © 2026 AUTOMOBILI LAMBORGHINI S.P.A. A SOLE SHAREHOLDER COMPANY PART OF AUDI GROUP. ALL RIGHTS RESERVED.
+            © 2026 DEFENDER. JAGUAR LAND ROVER LIMITED. REGISTERED IN ENGLAND. ALL RIGHTS RESERVED.
           </div>
           <div style={{ display: 'flex', gap: '20px' }}>
             <a href="#" style={{ color: 'var(--color-steel-mid)' }}>PRIVACY STATEMENT</a>

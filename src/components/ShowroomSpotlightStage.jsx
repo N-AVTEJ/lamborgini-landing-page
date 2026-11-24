@@ -1,38 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Play, Square, Activity } from 'lucide-react';
-import { v12Engine } from '../utils/engineAudio';
+import { defenderV8Engine } from '../utils/engineAudio';
 
 export default function ShowroomSpotlightStage() {
   const [spotlightMode, setSpotlightMode] = useState('theater'); // 'theater' | 'ambient' | 'stealth'
-  const [currentAngle, setCurrentAngle] = useState('aero'); // 'aero' | 'cockpit' | 'temerario'
+  const [currentAngle, setCurrentAngle] = useState('aero'); // 'aero' | 'cockpit' | 'studio'
   const [engineRunning, setEngineRunning] = useState(false);
   const [currentRPM, setCurrentRPM] = useState(0);
 
   const angleImages = {
     aero: {
-      url: '/images/revuelto-yellow-spotlight.jpg',
-      label: 'EXTERIOR 3/4 FRONT AERO',
-      badge: 'GIALLO INTI SHOWROOM SPEC'
+      url: '/images/defender-octa-yellow-spotlight.jpg',
+      label: 'EXTERIOR 3/4 FRONT STANCE',
+      badge: 'OCTA TROPHY YELLOW SHOWROOM SPEC'
     },
     cockpit: {
-      url: '/images/interior-cockpit-macro.jpg',
-      label: 'AERONAUTICAL COCKPIT',
-      badge: 'FORGED CARBON & AVVIO FLAP'
+      url: '/images/defender-interior-cockpit.jpg',
+      label: 'TACTICAL LUXURY COCKPIT',
+      badge: 'MAGNESIUM BEAM & PIVI PRO'
     },
-    temerario: {
-      url: '/images/temerario-studio.jpg',
-      label: 'SANT\'AGATA STUDIO STAGE',
-      badge: 'GRIGIO TELESTO MONOFUSELAGE'
+    studio: {
+      url: '/images/defender-90-studio.jpg',
+      label: 'SOLIHULL STUDIO STAGE',
+      badge: 'CARPATHIAN GREY SATIN FINISH'
     }
   };
 
   const handleToggleEngine = () => {
     if (engineRunning) {
-      v12Engine.stop();
+      defenderV8Engine.stop();
       setEngineRunning(false);
       setCurrentRPM(0);
     } else {
-      v12Engine.startIdle((rpm) => {
+      defenderV8Engine.startIdle((rpm) => {
         setCurrentRPM(rpm);
       });
       setEngineRunning(true);
@@ -41,21 +41,21 @@ export default function ShowroomSpotlightStage() {
 
   const handleRevThrottle = () => {
     if (!engineRunning) {
-      v12Engine.startIdle((rpm) => {
+      defenderV8Engine.startIdle((rpm) => {
         setCurrentRPM(rpm);
       });
       setEngineRunning(true);
       setTimeout(() => {
-        v12Engine.revEngine();
+        defenderV8Engine.revEngine();
       }, 400);
     } else {
-      v12Engine.revEngine();
+      defenderV8Engine.revEngine();
     }
   };
 
   useEffect(() => {
     return () => {
-      v12Engine.stop();
+      defenderV8Engine.stop();
     };
   }, []);
 
@@ -91,7 +91,7 @@ export default function ShowroomSpotlightStage() {
                 marginBottom: '8px'
               }}
             >
-              CENTRO STILE SANT'AGATA BOLOGNESE
+              SPECIAL VEHICLE OPERATIONS · SOLIHULL
             </div>
             <h2 className="section-title" style={{ color: 'var(--color-pearl-white)' }}>
               SHOWROOM STAGE
@@ -200,7 +200,7 @@ export default function ShowroomSpotlightStage() {
                 }}
               >
                 <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                  6.5L V12 NATURALLY ASPIRATED TELEMETRY
+                  4.4L TWIN-TURBO V8 TELEMETRY
                 </div>
                 <div
                   style={{
@@ -216,7 +216,7 @@ export default function ShowroomSpotlightStage() {
                 {/* Visual Equalizer / Soundwave */}
                 <div style={{ display: 'flex', alignItems: 'flex-end', height: '18px', gap: '3px' }}>
                   {[...Array(12)].map((_, i) => {
-                    const threshold = 1000 + i * 700;
+                    const threshold = 800 + i * 530;
                     const isActive = currentRPM >= threshold;
                     return (
                       <span
@@ -314,7 +314,7 @@ export default function ShowroomSpotlightStage() {
                 }}
               >
                 {engineRunning ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-                <span>{engineRunning ? 'SHUTDOWN V12 (STOP)' : 'IGNITE V12 (AVVIO)'}</span>
+                <span>{engineRunning ? 'SHUTDOWN DEFENDER V8 (STOP)' : 'IGNITE DEFENDER V8 (START)'}</span>
               </button>
 
               {engineRunning && (
@@ -330,7 +330,7 @@ export default function ShowroomSpotlightStage() {
                   }}
                 >
                   <Activity size={14} />
-                  <span>REV TO 9,500 RPM</span>
+                  <span>REV TO 7,200 RPM</span>
                 </button>
               )}
             </div>
@@ -353,10 +353,10 @@ export default function ShowroomSpotlightStage() {
               COMBINED SYSTEM POWER
             </div>
             <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              1,015 CV
+              635 PS
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              6.5L L545 V12 ENGINE + 3 ELECTRIC MOTORS
+              4.4L TWIN-TURBO MHEV V8 ENGINE
             </div>
           </div>
 
@@ -365,10 +365,10 @@ export default function ShowroomSpotlightStage() {
               0–100 KM/H ACCELERATION
             </div>
             <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              2.5 SEC
+              3.8 SEC
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              LAUNCH CONTROL WITH FULL E-TORQUE VECTORING
+              DYNAMIC LAUNCH MODE WITH 750 NM TORQUE
             </div>
           </div>
 
@@ -377,27 +377,27 @@ export default function ShowroomSpotlightStage() {
               MAXIMUM VELOCITY
             </div>
             <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              &gt;350 KM/H
+              250 KM/H
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              ACTIVE AERODYNAMICS GENERATING +61% DOWNFORCE
+              6D DYNAMICS HYDRAULIC INTERLINKED SUSPENSION
             </div>
           </div>
 
           <div style={{ backgroundColor: 'var(--surface-carbon-deep)', padding: 'var(--spacing-32)' }}>
             <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
-              NATURAL INDUCTION REDLINE
+              PEAK ENGINE REDLINE
             </div>
             <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              9,500 RPM
+              7,200 RPM
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              LIGHTEST &amp; MOST POWERFUL 12-CYLINDER IN BRAND HISTORY
+              TUNED TWIN-TURBO INDUCTION WITH ACTIVE EXHAUST
             </div>
           </div>
         </div>
 
-        {/* Chassis Monofuselage Engineering Note */}
+        {/* Chassis Architecture Engineering Note */}
         <div
           style={{
             marginTop: '24px',
@@ -413,14 +413,14 @@ export default function ShowroomSpotlightStage() {
         >
           <div>
             <div style={{ fontSize: '13px', color: 'var(--color-pearl-white)', marginBottom: '4px' }}>
-              AERONAUTICAL MONOFUSELAGE ARCHITECTURE
+              D7X ALL-ALUMINUM MONOCOQUE ARCHITECTURE
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              100% FORGED COMPOSITES MONOCOQUE · +25% TORSIONAL RIGIDITY OVER AVENTADOR · -10% WEIGHT
+              LIGHTWEIGHT EXTREME-STIFFNESS ALUMINUM MONOCOQUE · 29 KNM/DEG TORSIONAL RIGIDITY · 3X STRONGER THAN BODY-ON-FRAME
             </div>
           </div>
           <a href="#event-banner" className="btn-ghost" style={{ fontSize: '12px', color: '#ffffff' }}>
-            <span>DISCOVER MONOFUSELAGE ENGINEERING</span>
+            <span>DISCOVER D7X ARCHITECTURE</span>
             <ArrowRight size={14} />
           </a>
         </div>

@@ -3,44 +3,44 @@ import { ArrowRight } from 'lucide-react';
 
 const modelList = [
   {
-    id: 'revuelto',
-    category: 'V12 HPEV',
-    tag: 'HIGH PERFORMANCE ELECTRIFIED VEHICLE',
-    name: 'REVUELTO',
-    hp: '1,015 CV',
-    speed: '>350 KM/H',
-    accel: '2.5 S',
-    image: '/images/revuelto-yellow-spotlight.jpg',
-    descriptor: '6.5-LITER V12 NATURALLY ASPIRATED WITH THREE AXIAL FLUX ELECTRIC MOTORS'
+    id: 'defender-octa',
+    category: 'DEFENDER OCTA',
+    tag: 'EXTREME HIGH-PERFORMANCE V8',
+    name: 'DEFENDER OCTA',
+    hp: '635 PS',
+    speed: '250 KM/H',
+    accel: '3.8 S',
+    image: '/images/defender-octa-yellow-spotlight.jpg',
+    descriptor: '4.4-LITER TWIN-TURBO MHEV V8 WITH HYDRAULIC 6D DYNAMICS AND FLARED WHEEL ARCHES'
   },
   {
-    id: 'temerario',
-    category: 'V8 HPEV',
-    tag: 'TWIN-TURBO REVOLUTION',
-    name: 'TEMERARIO',
-    hp: '920 CV',
-    speed: '343 KM/H',
-    accel: '2.7 S',
-    image: '/images/temerario-studio.jpg',
-    descriptor: '4.0-LITER TWIN-TURBO FLAT-PLANE V8 REVVING UP TO AN UNPRECEDENTED 10,000 RPM'
+    id: 'defender-110',
+    category: 'DEFENDER 110',
+    tag: 'EXPEDITION BENCHMARK',
+    name: 'DEFENDER 110',
+    hp: '525 PS',
+    speed: '240 KM/H',
+    accel: '5.2 S',
+    image: '/images/defender-110-hero-night.jpg',
+    descriptor: '5.0-LITER SUPERCHARGED V8 WITH DUAL-SPEED TRANSFER BOX AND 900MM WADING CAPABILITY'
   },
   {
-    id: 'sc63',
-    category: 'HYBRID LMDH',
-    tag: 'SQUADRA CORSE RACING',
-    name: 'SC63',
-    hp: '680 CV',
-    speed: '340+ KM/H',
-    accel: '2.3 S',
-    image: '/images/sc63-racing-lemans.jpg',
-    descriptor: 'CUSTOM 3.8-LITER COLD-V TWIN-TURBO V8 ENGINEERED FOR ENDURANCE LE MANS GLORY'
+    id: 'defender-90',
+    category: 'DEFENDER 90',
+    tag: 'AGILE SHORT WHEELBASE',
+    name: 'DEFENDER 90',
+    hp: '525 PS',
+    speed: '240 KM/H',
+    accel: '5.2 S',
+    image: '/images/defender-90-studio.jpg',
+    descriptor: 'COMPACT THREE-DOOR CHASSIS WITH EXCEPTIONAL BREAKOVER ANGLE AND SUPERCHARGED MUSCLE'
   }
 ];
 
 export default function ModelLineupSection({ onSelectModel }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
 
-  const filters = ['ALL', 'V12 HPEV', 'V8 HPEV', 'HYBRID LMDH'];
+  const filters = ['ALL', 'DEFENDER OCTA', 'DEFENDER 110', 'DEFENDER 90'];
 
   const displayedModels = activeFilter === 'ALL'
     ? modelList
@@ -68,7 +68,7 @@ export default function ModelLineupSection({ onSelectModel }) {
                 marginBottom: '8px'
               }}
             >
-              CURRENT SANT'AGATA PRODUCTION
+              SOLIHULL PRODUCTION &amp; EXPEDITION
             </div>
             <h2 className="section-title" style={{ color: 'var(--color-carbony-black)' }}>
               MODELS
@@ -155,7 +155,7 @@ export default function ModelLineupSection({ onSelectModel }) {
 
               {/* Caption Block below photograph with 24px internal padding */}
               <div style={{ padding: 'var(--spacing-24)', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                {/* Date Stamp & Category above title (10-12px LamboType uppercase #7d7d7d) */}
+                {/* Date Stamp & Category above title (10-12px uppercase #7d7d7d) */}
                 <div
                   style={{
                     fontSize: '11px',

@@ -3,28 +3,28 @@ import { ArrowRight } from 'lucide-react';
 
 const editorialStories = [
   {
-    id: 'sc63-lemans',
+    id: 'defender-rally',
     date: '24 NOV 2026',
-    category: 'MOTORSPORT',
-    title: 'LAMBORGHINI SC63: THE HYBRID HYPERCAR CONQUERS THE 24 HOURS OF LE MANS',
-    summary: 'Squadra Corse demonstrates unprecedented hybrid reliability and blistering pace against global prototype competition in FIA WEC.',
-    image: '/images/sc63-racing-lemans.jpg'
+    category: 'EXPEDITION & RALLY',
+    title: 'DEFENDER OCTA: RECORD TRANS-DESERT RALLY RAID ACROSS THE DAKAR CORRIDOR',
+    summary: 'Special Vehicle Operations proves extreme durability with 6D Dynamics interlinked hydraulic suspension across 5,000 km of brutal wilderness.',
+    image: '/images/defender-rally-expedition.jpg'
   },
   {
-    id: 'cor-tauri',
+    id: 'tactical-luxury',
     date: '18 NOV 2026',
-    category: 'SUSTAINABILITY & ROADMAP',
-    title: 'DIREZIONE COR TAURI: FULL HYBRIDIZATION MILESTONE ACHIEVED IN SANT\'AGATA',
-    summary: 'With Revuelto, Temerario, and Urus SE now active in production, Automobili Lamborghini completes Phase 2 of its historic environmental pact.',
-    image: '/images/interior-cockpit-macro.jpg'
+    category: 'MATERIAL INNOVATION',
+    title: 'TACTICAL LUXURY: INSIDE THE REDESIGNED DEFENDER HIGH-DURABILITY COCKPIT',
+    summary: 'Engineered with Ultrafabrics, powder-coated magnesium structural cross-beam, and integrated Pivi Pro navigation for limitless exploration.',
+    image: '/images/defender-interior-cockpit.jpg'
   },
   {
-    id: 'polo-storico',
+    id: 'solihull-heritage',
     date: '04 NOV 2026',
-    category: 'HERITAGE & POLO STORICO',
-    title: 'POLO STORICO: 50 YEARS OF COUNTACH LP400 CHASSIS RESTORATION',
-    summary: 'Master craftspeople at the historical workshop resurrect the iconic wedge masterpiece using original engineering blueprints from 1974.',
-    image: '/images/polo-storico-countach.jpg'
+    category: 'HERITAGE & CLASSIC WORKS',
+    title: 'SOLIHULL CLASSIC WORKS: 75 YEARS OF DEFENDER HERITAGE RESTORATION',
+    summary: 'Master technicians at the Solihull historical facility restore original Series I and Defender Works V8 Trophy icons using factory heritage archives.',
+    image: '/images/defender-classic-heritage.jpg'
   }
 ];
 
@@ -51,7 +51,7 @@ export default function StoryGridSection() {
                 marginBottom: '8px'
               }}
             >
-              NEWS, MOTORSPORT &amp; HERITAGE
+              NEWS, EXPEDITIONS &amp; HERITAGE
             </div>
             <h2 className="section-title" style={{ color: 'var(--color-carbony-black)' }}>
               NEWS &amp; STORIES
@@ -63,7 +63,7 @@ export default function StoryGridSection() {
             className="section-action"
             style={{ color: 'var(--color-carbony-black)' }}
           >
-            <span>DESCUBRIR EDITORIALS</span>
+            <span>DISCOVER EDITORIALS</span>
             <ArrowRight size={14} />
           </a>
         </div>
@@ -81,7 +81,7 @@ export default function StoryGridSection() {
                 padding: 0
               }}
             >
-              {/* Date Stamp & Category: 10-12px LamboType UPPERCASE */}
+              {/* Date Stamp & Category: 10-12px UPPERCASE */}
               <div
                 style={{
                   fontSize: '11px',
@@ -93,7 +93,7 @@ export default function StoryGridSection() {
                 {story.date} · {story.category}
               </div>
 
-              {/* Headline: 16-27px LamboType UPPERCASE */}
+              {/* Headline: 16-27px UPPERCASE */}
               <h3
                 style={{
                   fontSize: '20px',

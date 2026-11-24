@@ -13,12 +13,12 @@ export default function EventBannerSection() {
   return (
     <section
       id="event-banner"
-      aria-label="Squadra Corse Event Banner"
+      aria-label="Defender Expedition Event Banner"
       style={{
         position: 'relative',
         width: '100%',
         backgroundColor: 'var(--surface-carbony)',
-        backgroundImage: 'linear-gradient(to right, rgba(24, 24, 24, 0.94) 0%, rgba(24, 24, 24, 0.82) 48%, rgba(24, 24, 24, 0.45) 100%), url(/images/sc63-racing-lemans.jpg)',
+        backgroundImage: 'linear-gradient(to right, rgba(24, 24, 24, 0.94) 0%, rgba(24, 24, 24, 0.82) 48%, rgba(24, 24, 24, 0.45) 100%), url(/images/defender-rally-expedition.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center 40%',
         padding: '40px 0',
@@ -50,10 +50,10 @@ export default function EventBannerSection() {
               }}
             >
               <Trophy size={16} color="var(--color-steel-mid)" />
-              <span>OFFICIAL SQUADRA CORSE CALENDAR</span>
+              <span>OFFICIAL DEFENDER EXPEDITION TROPHY</span>
             </div>
 
-            {/* Headline at 54–80px LamboType uppercase white */}
+            {/* Headline at 54–80px uppercase white */}
             <h2
               style={{
                 fontSize: 'clamp(54px, 5.5vw, 76px)',
@@ -65,7 +65,7 @@ export default function EventBannerSection() {
                 textTransform: 'uppercase'
               }}
             >
-              ESPERIENZA CORSA &amp; SUPER TROFEO WORLD FINALS
+              DEFENDER EXPEDITION TROPHY &amp; GLOBAL OFF-ROAD FINALS
             </h2>
 
             {/* Supporting body at 16–18px uppercase white */}
@@ -80,7 +80,7 @@ export default function EventBannerSection() {
                 fontWeight: 400
               }}
             >
-              TEST YOUR LIMITS ON EUROPE'S MOST DEMANDING CIRCUITS. RECEIVE EXCLUSIVE ONE-ON-ONE TELEMETRY COACHING FROM OFFICIAL LAMBORGHINI FACTORY PILOTS BEHIND THE WHEEL OF THE HURACÁN SUPER TROFEO EVO2.
+              TEST YOUR EXPEDITION LIMITS ACROSS THE PLANET'S MOST UNFORGIVING WILDERNESS. RECEIVE EXCLUSIVE ONE-ON-ONE ALL-TERRAIN TELEMETRY COACHING FROM OFFICIAL LAND ROVER EXPEDITION MASTERS BEHIND THE WHEEL OF THE DEFENDER 110 TROPHY.
             </p>
 
             {/* Giallo CTA Button Below */}
@@ -94,13 +94,13 @@ export default function EventBannerSection() {
                   color: 'var(--color-pearl-white)'
                 }}
               >
-                <span>REQUEST TRACK INVITATION</span>
+                <span>REQUEST EXPEDITION INVITATION</span>
                 <ArrowRight size={16} strokeWidth={2} />
               </a>
             </div>
           </div>
 
-          {/* Right Side: Implicit photographic content & schedule telemetry */}
+          {/* Right Side: Expedition destinations */}
           <div
             style={{
               backgroundColor: 'rgba(24, 24, 24, 0.78)',
@@ -119,49 +119,49 @@ export default function EventBannerSection() {
                 textTransform: 'uppercase'
               }}
             >
-              CONFIRMED GRAND PRIX DESTINATIONS
+              CONFIRMED EXPEDITION DESTINATIONS
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--color-graphite-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '16px', color: 'var(--color-pearl-white)', letterSpacing: '0.0230em' }}>
-                    AUTODROMO ENZO E DINO FERRARI
+                    MOAB RED ROCK CANYONS
                   </span>
                   <span style={{ fontSize: '13px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                    IMOLA, ITALY
+                    UTAH, USA
                   </span>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                  OCTOBER 28–30, 2026 · WORLD FINALS
+                  OCTOBER 28–30, 2026 · GLOBAL TROPHY FINALS
                 </div>
               </div>
 
               <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--color-graphite-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '16px', color: 'var(--color-pearl-white)', letterSpacing: '0.0230em' }}>
-                    CIRCUIT DE SPA-FRANCORCHAMPS
+                    NAMIB DESERT DUNES
                   </span>
                   <span style={{ fontSize: '13px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                    STAVELOT, BELGIUM
+                    SWAKOPMUND, NAMIBIA
                   </span>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                  NOVEMBER 14–16, 2026 · EUROPE ROUND 6
+                  NOVEMBER 14–16, 2026 · CONTINENTAL CHALLENGE
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '16px', color: 'var(--color-pearl-white)', letterSpacing: '0.0230em' }}>
-                    YAS MARINA CIRCUIT
+                    ARCTIC ICE FIELDS
                   </span>
                   <span style={{ fontSize: '13px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                    ABU DHABI, UAE
+                    ARJEPLOG, SWEDEN
                   </span>
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                  DECEMBER 04–06, 2026 · MIDDLE EAST FINALE
+                  DECEMBER 04–06, 2026 · SUB-ZERO POLAR FINALE
                 </div>
               </div>
             </div>

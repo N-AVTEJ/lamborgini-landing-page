@@ -10,7 +10,7 @@ import Footer from './components/Footer';
 
 export default function App() {
   return (
-    <div className="lambo-app" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="lambo-app defender-app" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. Primary Site Navigation Bar (Fixed 64px, Carbony Black #202020) */}
       <Navbar />
 
@@ -29,8 +29,8 @@ export default function App() {
 
         {/* 6. Full-Bleed Editorial Image: 100% width, 0px radius, no caption overlay */}
         <FullBleedEditorialImage
-          image="/images/sc63-racing-lemans.jpg"
-          alt="Lamborghini SC63 LMDh high-speed endurance prototype at Autodromo Nazionale Monza"
+          image="/images/defender-rally-expedition.jpg"
+          alt="Land Rover Defender OCTA rally raid conquering extreme desert sand dunes at high speed"
         />
 
         {/* 7. Event Banner Band: Lighter photographic background, white headline, Giallo CTA button, 40px padding */}
