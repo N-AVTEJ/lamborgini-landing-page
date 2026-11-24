@@ -1,32 +1,116 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Trophy } from 'lucide-react';
+import { useReducedMotion } from '../utils/useReducedMotion';
 
 /**
  * Event Banner Component
  * Role: Promotional or event announcement band
- * Lighter photographic background with overlay text block at left.
+ * Background: desert-expedition video (autoplay, muted, loop, playsInline),
+ * lazy-mounted via IntersectionObserver so it only loads/plays once scrolled near.
+ * Reduced motion fallback: mounts poster <img> instead of <video> (zero <video> tags in DOM).
  * Headline at 54–80px uppercase white, supporting body at 16–18px uppercase white,
- * then a Giallo CTA button below. Right side: implicit photographic content.
+ * then a Giallo CTA button below. Right side: confirmed expedition destinations.
  * Padding: 40px top/bottom.
  */
-export default function EventBannerSection() {
+export default function EventBannerSection({ forceMount = false }) {
+  const prefersReducedMotion = useReducedMotion();
+  const sectionRef = useRef(null);
+  const [isInViewport, setIsInViewport] = useState(() => {
+    return forceMount || typeof window === 'undefined' || typeof IntersectionObserver === 'undefined';
+  });
+
+  const shouldMountMedia = forceMount || isInViewport;
+
+  useEffect(() => {
+    if (forceMount || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsInViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '250px 0px', threshold: 0.01 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [forceMount]);
+
   return (
     <section
       id="event-banner"
+      ref={sectionRef}
       aria-label="Defender Expedition Event Banner"
       style={{
         position: 'relative',
         width: '100%',
         backgroundColor: 'var(--surface-carbony)',
-        backgroundImage: 'linear-gradient(to right, rgba(24, 24, 24, 0.94) 0%, rgba(24, 24, 24, 0.82) 48%, rgba(24, 24, 24, 0.45) 100%), url(/images/defender-rally-expedition.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 40%',
         padding: '40px 0',
         borderTop: '1px solid var(--color-graphite-border)',
-        borderBottom: '1px solid var(--color-graphite-border)'
+        borderBottom: '1px solid var(--color-graphite-border)',
+        overflow: 'hidden'
       }}
     >
-      <div className="defender-container lambo-container">
+      {/* Background Media Layer: Lazy-mounted via IntersectionObserver */}
+      {shouldMountMedia && (
+        prefersReducedMotion ? (
+          <img
+            src="/videos/desert-expedition-poster.jpg"
+            alt="Defender Desert Expedition"
+            className="event-banner-bg-poster"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 40%',
+              zIndex: 0
+            }}
+          />
+        ) : (
+          <video
+            className="event-banner-bg-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/videos/desert-expedition-poster.jpg"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 40%',
+              zIndex: 0
+            }}
+          >
+            <source src="/videos/desert-expedition.webm" type="video/webm" />
+            <source src="/videos/desert-expedition.mp4" type="video/mp4" />
+          </video>
+        )
+      )}
+
+      {/* Atmospheric High-Contrast Dark Gradient Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to right, rgba(24, 24, 24, 0.94) 0%, rgba(24, 24, 24, 0.82) 48%, rgba(24, 24, 24, 0.45) 100%)',
+          zIndex: 1,
+          pointerEvents: 'none'
+        }}
+      />
+
+      <div className="defender-container lambo-container" style={{ position: 'relative', zIndex: 2 }}>
         <div
           style={{
             display: 'grid',
