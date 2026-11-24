@@ -415,7 +415,10 @@ export default function ShowroomSpotlightStage() {
               <StudioConfigurator
                 isActive={currentAngle === 'studio'}
                 currentColor={studioColor}
-                onColorChange={setStudioColor}
+                onColorChange={(hex) => {
+                  setStudioColor(hex);
+                  setStudioPresetId('custom');
+                }}
                 selectedPresetId={studioPresetId}
                 onSelectPreset={(swatch) => {
                   setStudioPresetId(swatch.id);

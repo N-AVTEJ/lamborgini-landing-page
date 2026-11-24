@@ -112,12 +112,35 @@ describe('Problem 3: Studio 2D Configurator Component', () => {
     expect(screen.getByText('BESPOKE SVO COLOR')).toBeInTheDocument();
   });
 
-  it('renders centered 2D studio photography asset with Solihull studio specification', () => {
+  it('renders centered 2D studio photography asset with Solihull studio specification and body panel mask', () => {
     const { container } = render(<StudioConfigurator />);
     const photo = container.querySelector('img.studio-vehicle-photo');
     expect(photo).toBeInTheDocument();
     expect(photo).toHaveAttribute('src', '/images/defender-90-studio.jpg');
     expect(screen.getByText(/SOLIHULL STUDIO SPECIFICATION · 2D BESPOKE COLOR CONFIGURATOR/i)).toBeInTheDocument();
+
+    const bodyTint = container.querySelector('.studio-vehicle-body-tint');
+    expect(bodyTint).toBeInTheDocument();
+    expect(bodyTint).toHaveStyle({ maskImage: 'url(/images/defender-body-mask.png)' });
+  });
+
+  it('correctly updates preset state to custom when choosing a custom hex in Showroom stage', () => {
+    render(<ShowroomSpotlightStage />);
+    const studioBtn = screen.getByRole('button', { name: /STUDIO/i });
+    fireEvent.click(studioBtn);
+
+    // First select Fuji White
+    const fujiBtn = screen.getByRole('button', { name: /Select FUJI WHITE/i });
+    fireEvent.click(fujiBtn);
+    expect(screen.getByText('HIGH-CONTRAST ARCTIC SPEC')).toBeInTheDocument();
+
+    // Now enter custom color
+    const colorInput = screen.getByLabelText(/choose custom paint color/i);
+    fireEvent.change(colorInput, { target: { value: '#c41e3a' } });
+
+    // Must update HUD badge to BESPOKE SVO COLOR, not remain FUJI WHITE
+    expect(screen.getByText('BESPOKE SVO COLOR')).toBeInTheDocument();
+    expect(screen.getByText('SPECIAL VEHICLE OPERATIONS BESPOKE SPEC')).toBeInTheDocument();
   });
 });
 

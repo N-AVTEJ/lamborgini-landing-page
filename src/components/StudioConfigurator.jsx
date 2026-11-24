@@ -171,7 +171,7 @@ export default function StudioConfigurator({
               inset: 0,
               backgroundColor: currentColor,
               mixBlendMode: 'color',
-              opacity: 0.38,
+              opacity: 0.06,
               pointerEvents: 'none',
               transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease'
             }}
@@ -196,9 +196,7 @@ export default function StudioConfigurator({
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: '1020px',
               height: '100%',
-              maxHeight: '580px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -213,14 +211,14 @@ export default function StudioConfigurator({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'contain',
+                objectFit: 'cover',
                 pointerEvents: 'none',
                 userSelect: 'none',
                 filter: 'contrast(1.05) brightness(1.02)'
               }}
             />
 
-            {/* Body Panel Color Overlay with smooth ~400ms transition */}
+            {/* Body Panel Color Overlay with smooth ~400ms transition (body panels only, not glass/tires/trim) */}
             <div
               className="studio-vehicle-body-tint"
               style={{
@@ -228,11 +226,17 @@ export default function StudioConfigurator({
                 inset: 0,
                 backgroundColor: currentColor,
                 mixBlendMode: 'color',
-                opacity: selectedPresetId === 'carpathian-grey' ? 0.22 : 0.44,
+                opacity: selectedPresetId === 'carpathian-grey' ? 0.35 : selectedPresetId === 'fuji-white' ? 0.40 : 0.88,
                 pointerEvents: 'none',
                 transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
-                maskImage: 'radial-gradient(ellipse 68% 46% at 50% 50%, black 50%, transparent 92%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 68% 46% at 50% 50%, black 50%, transparent 92%)'
+                maskImage: 'url(/images/defender-body-mask.png)',
+                WebkitMaskImage: 'url(/images/defender-body-mask.png)',
+                maskSize: 'cover',
+                WebkitMaskSize: 'cover',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat'
               }}
             />
 
@@ -244,11 +248,17 @@ export default function StudioConfigurator({
                 inset: 0,
                 backgroundColor: currentColor,
                 mixBlendMode: 'soft-light',
-                opacity: selectedPresetId === 'fuji-white' ? 0.52 : 0.36,
+                opacity: selectedPresetId === 'fuji-white' ? 0.65 : 0.45,
                 pointerEvents: 'none',
                 transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
-                maskImage: 'radial-gradient(ellipse 60% 40% at 50% 48%, black 45%, transparent 88%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 60% 40% at 50% 48%, black 45%, transparent 88%)'
+                maskImage: 'url(/images/defender-body-mask.png)',
+                WebkitMaskImage: 'url(/images/defender-body-mask.png)',
+                maskSize: 'cover',
+                WebkitMaskSize: 'cover',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat'
               }}
             />
           </div>
