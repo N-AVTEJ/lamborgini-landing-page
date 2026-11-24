@@ -2,6 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Trophy } from 'lucide-react';
 import { useReducedMotion } from '../utils/useReducedMotion';
 
+function safePlay(video) {
+  if (!video || typeof video.play !== 'function') return;
+  try {
+    const p = video.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {});
+    }
+  } catch {
+    // ignore play errors
+  }
+}
+
 /**
  * Event Banner Component
  * Role: Promotional or event announcement band
@@ -16,6 +28,7 @@ export default function EventBannerSection({ forceMount = false, forceReducedMot
   const systemReducedMotion = useReducedMotion();
   const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
   const sectionRef = useRef(null);
+  const videoRef = useRef(null);
   const [isInViewport, setIsInViewport] = useState(() => {
     return forceMount || typeof window === 'undefined' || typeof IntersectionObserver === 'undefined';
   });
@@ -31,7 +44,15 @@ export default function EventBannerSection({ forceMount = false, forceReducedMot
       (entries) => {
         if (entries[0]?.isIntersecting) {
           setIsInViewport(true);
-          observer.disconnect();
+          if (videoRef.current) {
+            safePlay(videoRef.current);
+          }
+        } else if (videoRef.current && typeof videoRef.current.pause === 'function') {
+          try {
+            videoRef.current.pause();
+          } catch {
+            // ignore pause errors
+          }
         }
       },
       { rootMargin: '250px 0px', threshold: 0.01 }
@@ -78,6 +99,7 @@ export default function EventBannerSection({ forceMount = false, forceReducedMot
           />
         ) : (
           <video
+            ref={videoRef}
             className="event-banner-bg-video"
             autoPlay
             muted

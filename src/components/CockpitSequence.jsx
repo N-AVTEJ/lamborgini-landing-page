@@ -15,7 +15,7 @@ function safePlay(video) {
 }
 
 export default function CockpitSequence({
-  isActive = false,
+  isActive = true,
   doorPreload = 'metadata',
   forceReducedMotion,
   startStatic: propStartStatic,
@@ -72,7 +72,11 @@ export default function CockpitSequence({
   const handleDoorEnded = useCallback(() => {
     setShowInterior(true);
     if (interiorVideoRef.current) {
-      interiorVideoRef.current.currentTime = 0;
+      try {
+        interiorVideoRef.current.currentTime = 0;
+      } catch {
+        // ignore seek errors on unseekable media
+      }
       safePlay(interiorVideoRef.current);
     }
     triggerPowerUpSequence();
@@ -81,7 +85,11 @@ export default function CockpitSequence({
   // Handle cockpit-interior video ended: hold/freeze last frame into live UI state
   const handleInteriorEnded = useCallback(() => {
     if (interiorVideoRef.current) {
-      interiorVideoRef.current.pause();
+      try {
+        interiorVideoRef.current.pause();
+      } catch {
+        // ignore pause errors
+      }
     }
   }, []);
 
@@ -95,14 +103,59 @@ export default function CockpitSequence({
     setAmbientLit(false);
 
     if (doorVideoRef.current) {
-      doorVideoRef.current.currentTime = 0;
+      try {
+        doorVideoRef.current.currentTime = 0;
+      } catch {
+        // ignore seek errors
+      }
       safePlay(doorVideoRef.current);
     }
     if (interiorVideoRef.current) {
-      interiorVideoRef.current.currentTime = 0;
-      interiorVideoRef.current.pause();
+      try {
+        interiorVideoRef.current.currentTime = 0;
+      } catch {
+        // ignore seek errors
+      }
+      try {
+        interiorVideoRef.current.pause();
+      } catch {
+        // ignore pause errors
+      }
     }
   }, [clearAllTimers]);
+
+  // For reduced motion: if active, in door-open phase and showInterior is false,
+  // advance to interior view and power-up after a brief non-motion delay
+  useEffect(() => {
+    if (isActive && prefersReducedMotion && phase === 'door-open' && !showInterior) {
+      const timer = setTimeout(() => {
+        handleDoorEnded();
+      }, 400);
+      timersRef.current.push(timer);
+      return () => clearTimeout(timer);
+    }
+  }, [isActive, prefersReducedMotion, phase, showInterior, handleDoorEnded]);
+
+  // When tab becomes inactive: pause videos and clear pending power-up timers to save CPU & battery
+  useEffect(() => {
+    if (!isActive) {
+      clearAllTimers();
+      if (doorVideoRef.current && typeof doorVideoRef.current.pause === 'function') {
+        try {
+          doorVideoRef.current.pause();
+        } catch {
+          // ignore pause errors
+        }
+      }
+      if (interiorVideoRef.current && typeof interiorVideoRef.current.pause === 'function') {
+        try {
+          interiorVideoRef.current.pause();
+        } catch {
+          // ignore pause errors
+        }
+      }
+    }
+  }, [isActive, clearAllTimers]);
 
   // When tab becomes active or is clicked from another tab: reset and play cockpit-door
   useEffect(() => {
@@ -188,6 +241,7 @@ export default function CockpitSequence({
             preload={doorPreload}
             poster="/videos/cockpit-door-poster.jpg"
             onEnded={handleDoorEnded}
+            onError={handleDoorEnded}
             style={{
               position: 'absolute',
               inset: 0,
@@ -214,6 +268,7 @@ export default function CockpitSequence({
             preload="auto"
             poster="/videos/cockpit-interior-poster.jpg"
             onEnded={handleInteriorEnded}
+            onError={handleInteriorEnded}
             style={{
               position: 'absolute',
               inset: 0,

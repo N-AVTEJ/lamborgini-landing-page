@@ -128,6 +128,34 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       expect(screen.getByText('STANDBY')).toBeInTheDocument();
       expect(screen.queryByText('READY · SPORT')).not.toBeInTheDocument();
     });
+
+    it('falls through to interior sequence and powers up cluster on video media error', () => {
+      vi.useFakeTimers();
+      const { container } = render(<CockpitSequence startStatic={false} />);
+      const doorVideo = container.querySelector('video.cockpit-door-video');
+      expect(doorVideo).toBeInTheDocument();
+
+      // Simulate media decode / network error
+      act(() => {
+        fireEvent.error(doorVideo);
+      });
+
+      // Recovers gracefully into interior view and activates cluster
+      const interiorVideo = container.querySelector('video.cockpit-interior-video');
+      expect(interiorVideo).toHaveStyle({ opacity: '1' });
+      expect(screen.getByText('DEFENDER V8 CLUSTER')).toBeInTheDocument();
+      expect(screen.getByText('READY · SPORT')).toBeInTheDocument();
+    });
+
+    it('pauses video elements when isActive transitions to false', () => {
+      const { container, rerender } = render(<CockpitSequence isActive={true} startStatic={false} />);
+      const doorVideo = container.querySelector('video.cockpit-door-video');
+      const pauseSpy = vi.spyOn(doorVideo, 'pause');
+
+      // User navigates away to another perspective tab
+      rerender(<CockpitSequence isActive={false} startStatic={false} />);
+      expect(pauseSpy).toHaveBeenCalled();
+    });
   });
 
   describe('2. cockpit-interior video asset integration', () => {
@@ -201,6 +229,15 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       expect(sources[0]).toHaveAttribute('src', '/videos/studio-turntable.webm');
       expect(sources[1]).toHaveAttribute('src', '/videos/studio-turntable.mp4');
     });
+
+    it('pauses turntable video when isActive is false', () => {
+      const { container, rerender } = render(<StudioConfigurator isActive={true} />);
+      const turntableVideo = container.querySelector('video.studio-turntable-video');
+      const pauseSpy = vi.spyOn(turntableVideo, 'pause');
+
+      rerender(<StudioConfigurator isActive={false} />);
+      expect(pauseSpy).toHaveBeenCalled();
+    });
   });
 
   describe('4. desert-expedition video asset integration', () => {
@@ -249,6 +286,43 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       const posterImg = container.querySelector('img.cockpit-door-poster');
       expect(posterImg).toBeInTheDocument();
       expect(posterImg).toHaveAttribute('src', '/videos/cockpit-door-poster.jpg');
+    });
+
+    it('advances from door-poster to interior-poster and powers up cluster under reduced motion without freezing', () => {
+      vi.useFakeTimers();
+      const { container } = render(<CockpitSequence forceReducedMotion={true} startStatic={false} />);
+      expect(container.querySelector('img.cockpit-door-poster')).toBeInTheDocument();
+
+      // Advance past reduced motion non-motion delay (400ms)
+      act(() => {
+        vi.advanceTimersByTime(450);
+      });
+
+      // Interior poster is displayed
+      expect(container.querySelector('img.cockpit-interior-poster')).toBeInTheDocument();
+      expect(screen.getByText('DEFENDER V8 CLUSTER')).toBeInTheDocument();
+      expect(screen.getByText('READY · SPORT')).toBeInTheDocument();
+    });
+
+    it('handles replay sequence cleanly without freezing under reduced motion', () => {
+      vi.useFakeTimers();
+      const { container } = render(<CockpitSequence forceReducedMotion={true} />);
+      const replayBtn = screen.getByRole('button', { name: /replay sequence/i });
+
+      // Click replay
+      act(() => {
+        fireEvent.click(replayBtn);
+      });
+
+      // Resets to door poster briefly
+      expect(container.querySelector('img.cockpit-door-poster')).toBeInTheDocument();
+
+      // Advances to interior view cleanly
+      act(() => {
+        vi.advanceTimersByTime(450);
+      });
+      expect(container.querySelector('img.cockpit-interior-poster')).toBeInTheDocument();
+      expect(screen.getByText('READY · SPORT')).toBeInTheDocument();
     });
 
     it('mounts poster <img> and ZERO <video> elements in DOM for Studio turntable when reduced motion is preferred', () => {

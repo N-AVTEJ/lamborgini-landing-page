@@ -413,6 +413,7 @@ export default function ShowroomSpotlightStage() {
               }}
             >
               <StudioConfigurator
+                isActive={currentAngle === 'studio'}
                 currentColor={studioColor}
                 onColorChange={setStudioColor}
                 selectedPresetId={studioPresetId}
@@ -563,7 +564,7 @@ export default function ShowroomSpotlightStage() {
                   onClick={() => {
                     if (angleKey === 'cockpit') {
                       setCockpitDoorPreload('auto');
-                      if (currentAngle === 'cockpit') {
+                      if (currentAngle === 'cockpit' || currentAngleRef.current === 'cockpit') {
                         setCockpitReplayTrigger((prev) => prev + 1);
                       }
                     }
@@ -571,6 +572,7 @@ export default function ShowroomSpotlightStage() {
                   }}
                   onMouseEnter={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
                   onFocus={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
+                  onTouchStart={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
                   className="btn-outlined spec-chip-tactile"
                   style={{
                     padding: '8px 14px',

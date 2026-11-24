@@ -1,9 +1,21 @@
-import React, { useState, useRef, useMemo, Suspense } from 'react';
+import React, { useState, useRef, useMemo, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Palette, Check, RefreshCw, Sliders, Maximize2 } from 'lucide-react';
 import { useReducedMotion } from '../utils/useReducedMotion';
+
+function safePlay(video) {
+  if (!video || typeof video.play !== 'function') return;
+  try {
+    const p = video.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {});
+    }
+  } catch {
+    // ignore play errors
+  }
+}
 
 const DEFENDER_PALETTE = [
   { id: 'giallo-vivo', name: 'GIALLO VIVO', hex: '#ffc000', badge: 'HERO OCTA LAUNCH SPEC' },
@@ -102,12 +114,14 @@ export default function StudioConfigurator({
   onColorChange,
   selectedPresetId: propSelectedPresetId,
   onSelectPreset,
-  forceReducedMotion
+  forceReducedMotion,
+  isActive = true
 }) {
   const [internalColor, setInternalColor] = useState(initialColor);
   const [internalPresetId, setInternalPresetId] = useState('giallo-vivo');
   const [autoRotate, setAutoRotate] = useState(true);
   const colorInputRef = useRef(null);
+  const turntableVideoRef = useRef(null);
 
   const currentColor = propCurrentColor !== undefined ? propCurrentColor : internalColor;
   const selectedPresetId = propSelectedPresetId !== undefined ? propSelectedPresetId : internalPresetId;
@@ -115,6 +129,20 @@ export default function StudioConfigurator({
   const systemReducedMotion = useReducedMotion();
   const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
   const hasWebGL = useMemo(() => canUseWebGL(), []);
+
+  // Pause background video when tab is inactive to preserve CPU, GPU & battery
+  useEffect(() => {
+    if (!turntableVideoRef.current) return;
+    if (isActive) {
+      safePlay(turntableVideoRef.current);
+    } else {
+      try {
+        turntableVideoRef.current.pause();
+      } catch {
+        // ignore pause errors
+      }
+    }
+  }, [isActive]);
 
   const handleSelectPreset = (swatch) => {
     if (onSelectPreset) {
@@ -185,8 +213,9 @@ export default function StudioConfigurator({
             />
           ) : (
             <video
+              ref={turntableVideoRef}
               className="studio-turntable-video"
-              autoPlay
+              autoPlay={isActive}
               muted
               loop
               playsInline
@@ -247,7 +276,7 @@ export default function StudioConfigurator({
                 maxDistance={7.5}
                 minPolarAngle={Math.PI / 6}
                 maxPolarAngle={Math.PI / 2.05}
-                autoRotate={prefersReducedMotion ? false : autoRotate}
+                autoRotate={prefersReducedMotion || !isActive ? false : autoRotate}
                 autoRotateSpeed={0.8}
               />
             </Canvas>
