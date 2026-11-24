@@ -18,8 +18,13 @@ describe('Problem 1: Cinematic Parallax and Tactile Interactions', () => {
     expect(screen.getByRole('heading', { level: 1, name: /DEFENDER OCTA/i })).toBeInTheDocument();
   });
 
-  it('renders ModelLineupSection vehicle cards with scroll-linked parallax image wraps', () => {
+  it('renders ModelLineupSection gallery with multi-layer parallax (bg grid, midground atmosphere, and car cards)', () => {
     const { container } = render(<ModelLineupSection />);
+    // Background and midground parallax layers
+    expect(container.querySelector('.gallery-parallax-bg')).toBeInTheDocument();
+    expect(container.querySelector('.gallery-parallax-mid')).toBeInTheDocument();
+
+    // Foreground vehicle cards with scroll-linked parallax image wraps
     const imgWraps = container.querySelectorAll('.vehicle-tile-img-wrap');
     expect(imgWraps.length).toBeGreaterThanOrEqual(5);
 
@@ -150,5 +155,48 @@ describe('Problem 4: Zero-Blank Crossfade & Shared-Element Transitions', () => {
     expect(container.querySelector('.showroom-stage-haze')).toBeInTheDocument();
     expect(container.querySelector('.showroom-spotlight-beam')).toBeInTheDocument();
     expect(container.querySelector('.showroom-floor-pool')).toBeInTheDocument();
+  });
+
+  it('persists customized car paint in STUDIO across tab switches to AERO and back', () => {
+    render(<ShowroomSpotlightStage />);
+
+    // Switch to STUDIO
+    const studioBtn = screen.getByRole('button', { name: /STUDIO/i });
+    fireEvent.click(studioBtn);
+
+    // Pick TASMAN BLUE
+    const tasmanBtn = screen.getByRole('button', { name: /Select TASMAN BLUE/i });
+    fireEvent.click(tasmanBtn);
+
+    expect(screen.getByText(/CUSTOM HEX: #2E434F/i)).toBeInTheDocument();
+
+    // Switch back to AERO
+    const aeroBtn = screen.getByRole('button', { name: /AERO/i });
+    fireEvent.click(aeroBtn);
+
+    // Switch back to STUDIO
+    fireEvent.click(studioBtn);
+
+    // Custom color must STILL be preserved!
+    expect(screen.getByText(/CUSTOM HEX: #2E434F/i)).toBeInTheDocument();
+    expect(screen.getByText('EXPEDITION OCEANIC METALLIC')).toBeInTheDocument();
+  });
+
+  it('handles rapid sequential perspective clicking gracefully without errors', () => {
+    const { container } = render(<ShowroomSpotlightStage />);
+
+    const cockpitBtn = screen.getByRole('button', { name: /COCKPIT/i });
+    const studioBtn = screen.getByRole('button', { name: /STUDIO/i });
+    const aeroBtn = screen.getByRole('button', { name: /AERO/i });
+
+    // Rapid successive clicks in quick succession
+    act(() => {
+      fireEvent.click(cockpitBtn);
+      fireEvent.click(studioBtn);
+      fireEvent.click(aeroBtn);
+    });
+
+    expect(container.querySelector('.shared-staging-canvas')).toBeInTheDocument();
+    expect(screen.getByText('OCTA TROPHY YELLOW SHOWROOM SPEC')).toBeInTheDocument();
   });
 });
