@@ -265,6 +265,37 @@ function VehicleTile({ model, onSelectModel }) {
 
 export default function ModelLineupSection({ onSelectModel }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [sectionScroll, setSectionScroll] = useState(0);
+  const sectionRef = useRef(null);
+
+  // Gallery multi-layer scroll-linked parallax (background & midground atmospheric depth)
+  React.useEffect(() => {
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    const prefersReducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    if (isTest || prefersReducedMotion) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight || 800;
+      // Scroll offset relative to section position in viewport
+      const offset = (windowHeight / 2) - (rect.top + rect.height / 2);
+      setSectionScroll(offset);
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(handleScroll);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const filters = ['ALL', 'DEFENDER OCTA', 'DEFENDER 110', 'DEFENDER 90', 'DEFENDER 130', 'DEFENDER TROPHY'];
 
@@ -275,14 +306,46 @@ export default function ModelLineupSection({ onSelectModel }) {
   return (
     <section
       id="models"
+      ref={sectionRef}
       className="surface-canvas"
       style={{
         width: '100%',
         backgroundColor: 'var(--surface-canvas-white)',
-        color: 'var(--color-carbony-black)'
+        color: 'var(--color-carbony-black)',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
-      <div className="defender-container lambo-container">
+      {/* Background Cinematic Parallax Layer: Topographic Grid Pattern */}
+      <div
+        className="gallery-parallax-bg"
+        style={{
+          position: 'absolute',
+          inset: '-10% 0',
+          backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(32, 32, 32, 0.04) 1px, transparent 1px)',
+          backgroundSize: '36px 36px',
+          transform: `translate3d(0, ${sectionScroll * 0.15}px, 0)`,
+          pointerEvents: 'none',
+          zIndex: 1,
+          willChange: 'transform'
+        }}
+      />
+
+      {/* Midground Parallax Layer: Solihull Expedition Gradient Atmosphere */}
+      <div
+        className="gallery-parallax-mid"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(245, 245, 245, 0.6) 0%, transparent 35%, rgba(245, 245, 245, 0.8) 100%)',
+          transform: `translate3d(0, ${sectionScroll * 0.08}px, 0)`,
+          pointerEvents: 'none',
+          zIndex: 2,
+          willChange: 'transform'
+        }}
+      />
+
+      <div className="defender-container lambo-container" style={{ position: 'relative', zIndex: 3 }}>
         {/* Signature Section Heading Block */}
         <div className="defender-section-header lambo-section-header">
           <div>
