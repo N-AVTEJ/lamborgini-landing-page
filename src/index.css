@@ -446,3 +446,136 @@ img, video {
 .tach-bar.active {
   animation: pulseTach 0.35s infinite ease-in-out;
 }
+
+/* Rev-Limit Shift Strobe Warning */
+@keyframes shiftFlashStrobe {
+  0%, 100% {
+    background-color: rgba(255, 192, 0, 0.95);
+    color: var(--color-pure-black);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: var(--color-pure-black);
+  }
+}
+
+.hud-shift-alert {
+  animation: shiftFlashStrobe 0.12s infinite alternate ease-in-out;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+  border: 1px solid var(--color-pearl-white);
+}
+
+/* Peak Hold Indicator */
+.peak-hold-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-giallo-vivo);
+  z-index: 4;
+}
+
+/* Telemetry Card Scanline Accent */
+.telemetry-card {
+  position: relative;
+  border: 1px solid var(--color-graphite-border);
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.telemetry-card:hover {
+  border-color: var(--color-pearl-white);
+  background-color: #222222;
+}
+
+.telemetry-hairline-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: transparent;
+  transition: background-color 0.25s ease;
+}
+
+.telemetry-card:hover .telemetry-hairline-accent {
+  background-color: var(--color-giallo-vivo);
+}
+
+/* Vehicle Tile Interactive Hover Lighting */
+.vehicle-tile-interactive {
+  position: relative;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.vehicle-tile-interactive:hover {
+  border-color: var(--color-graphite-border);
+}
+
+.vehicle-tile-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.vehicle-tile-img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vehicle-tile-interactive:hover .vehicle-tile-img {
+  transform: scale(1.035);
+}
+
+.vehicle-specular-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 2;
+}
+
+.vehicle-tile-interactive:hover .vehicle-specular-sheen {
+  opacity: 1;
+}
+
+/* Monolithic Typography Entrance Reveals */
+@keyframes monolithicReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-monolithic-reveal {
+  animation: monolithicReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dynamic Spotlight Beam Animation */
+.showroom-spotlight-beam {
+  will-change: left, transform, opacity;
+}
+
+/* Editorial Story Card Hover */
+.story-card-interactive {
+  transition: transform 0.25s ease;
+}
+
+.story-card-interactive:hover img {
+  transform: scale(1.03);
+}
+
+.story-card-interactive img {
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+

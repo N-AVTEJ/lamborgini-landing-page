@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 const modelList = [
@@ -58,6 +58,176 @@ const modelList = [
     descriptor: 'PURPOSE-BUILT LIMITED WORKS V8 EXPEDITION RECREATION WITH INTEGRATED WINCH AND UNDERBODY ARMOR'
   }
 ];
+
+// Interactive Vehicle Card with Cursor Spotlight Reflection & Hairline Illumination
+function VehicleTile({ model, onSelectModel }) {
+  const [lightCoords, setLightCoords] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
+  const imgWrapRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!imgWrapRef.current) return;
+    const rect = imgWrapRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    setLightCoords({ x, y });
+  };
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="vehicle-tile-interactive"
+      style={{
+        backgroundColor: 'var(--surface-canvas-white)',
+        border: isHovered ? '1px solid var(--color-carbony-black)' : '1px solid var(--color-marble-gray)',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'border-color 0.25s ease, background-color 0.25s ease'
+      }}
+    >
+      {/* Full-bleed Product Photograph with Interactive Specular Sheen (0px radius) */}
+      <div
+        ref={imgWrapRef}
+        onMouseMove={handleMouseMove}
+        className="vehicle-tile-img-wrap"
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '16/9',
+          overflow: 'hidden',
+          backgroundColor: 'var(--color-marble-gray)'
+        }}
+      >
+        <img
+          src={model.image}
+          alt={model.name}
+          loading="lazy"
+          className="vehicle-tile-img"
+        />
+
+        {/* Dynamic Specular Light Reflection Follower */}
+        <div
+          className="vehicle-specular-sheen"
+          style={{
+            background: `radial-gradient(circle at ${lightCoords.x}% ${lightCoords.y}%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.08) 40%, transparent 70%)`,
+            opacity: isHovered ? 1 : 0
+          }}
+        />
+
+        {/* Corner Telemetry Notch */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '12px',
+            right: '12px',
+            backgroundColor: 'rgba(24, 24, 24, 0.88)',
+            border: '1px solid var(--color-graphite-border)',
+            padding: '4px 8px',
+            fontSize: '10px',
+            color: 'var(--color-pearl-white)',
+            letterSpacing: '0.0230em',
+            zIndex: 3
+          }}
+        >
+          {model.hp} · {model.speed}
+        </div>
+      </div>
+
+      {/* Caption Block below photograph with 24px internal padding */}
+      <div style={{ padding: 'var(--spacing-24)', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {/* Date Stamp & Category above title */}
+        <div
+          style={{
+            fontSize: '11px',
+            color: 'var(--color-steel-mid)',
+            letterSpacing: '0.0230em',
+            marginBottom: '8px'
+          }}
+        >
+          2026 PRODUCTION · {model.category}
+        </div>
+
+        {/* Model Headline */}
+        <h3
+          style={{
+            fontSize: '28px',
+            letterSpacing: '0.0230em',
+            lineHeight: 1.15,
+            color: 'var(--color-carbony-black)',
+            marginBottom: '12px',
+            fontWeight: 400
+          }}
+        >
+          {model.name}
+        </h3>
+
+        {/* Spec Badges Row */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            padding: '16px 0',
+            borderTop: '1px solid var(--color-marble-gray)',
+            borderBottom: '1px solid var(--color-marble-gray)',
+            marginBottom: '16px'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>POWER</div>
+            <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.hp}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>0–100 KM/H</div>
+            <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.accel}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>MAX SPEED</div>
+            <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.speed}</div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p
+          style={{
+            fontSize: '13px',
+            lineHeight: '1.45',
+            color: 'var(--color-anvil)',
+            marginBottom: '24px',
+            flex: 1
+          }}
+        >
+          {model.descriptor}
+        </p>
+
+        {/* Ghost Link CTA */}
+        <div>
+          <a
+            href="#showroom-spotlight"
+            className="btn-ghost"
+            onClick={() => {
+              if (onSelectModel) onSelectModel(model.id);
+            }}
+            style={{
+              fontSize: '12px',
+              color: 'var(--color-carbony-black)'
+            }}
+          >
+            <span>EXPLORE MODEL DETAILS</span>
+            <ArrowRight
+              size={14}
+              style={{
+                transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
+                transition: 'transform 0.2s ease'
+              }}
+            />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ModelLineupSection({ onSelectModel }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
@@ -144,123 +314,11 @@ export default function ModelLineupSection({ onSelectModel }) {
           }}
         >
           {displayedModels.map((model) => (
-            <div
+            <VehicleTile
               key={model.id}
-              style={{
-                backgroundColor: 'var(--surface-canvas-white)',
-                border: 'none',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              {/* Full-bleed Product Photograph (0px radius) */}
-              <div
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  aspectRatio: '16/9',
-                  overflow: 'hidden',
-                  backgroundColor: 'var(--color-marble-gray)'
-                }}
-              >
-                <img
-                  src={model.image}
-                  alt={model.name}
-                  loading="lazy"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-
-              {/* Caption Block below photograph with 24px internal padding */}
-              <div style={{ padding: 'var(--spacing-24)', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                {/* Date Stamp & Category above title (10-12px uppercase #7d7d7d) */}
-                <div
-                  style={{
-                    fontSize: '11px',
-                    color: 'var(--color-steel-mid)',
-                    letterSpacing: '0.0230em',
-                    marginBottom: '8px'
-                  }}
-                >
-                  2026 PRODUCTION · {model.category}
-                </div>
-
-                {/* Model Headline */}
-                <h3
-                  style={{
-                    fontSize: '28px',
-                    letterSpacing: '0.0230em',
-                    lineHeight: 1.15,
-                    color: 'var(--color-carbony-black)',
-                    marginBottom: '12px',
-                    fontWeight: 400
-                  }}
-                >
-                  {model.name}
-                </h3>
-
-                {/* Spec Badges Row */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '12px',
-                    padding: '16px 0',
-                    borderTop: '1px solid var(--color-marble-gray)',
-                    borderBottom: '1px solid var(--color-marble-gray)',
-                    marginBottom: '16px'
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>POWER</div>
-                    <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.hp}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>0–100 KM/H</div>
-                    <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.accel}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)' }}>MAX SPEED</div>
-                    <div style={{ fontSize: '15px', color: 'var(--color-carbony-black)', fontWeight: 400 }}>{model.speed}</div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <p
-                  style={{
-                    fontSize: '13px',
-                    lineHeight: '1.45',
-                    color: 'var(--color-anvil)',
-                    marginBottom: '24px',
-                    flex: 1
-                  }}
-                >
-                  {model.descriptor}
-                </p>
-
-                {/* Ghost Link CTA */}
-                <div>
-                  <a
-                    href="#showroom-spotlight"
-                    className="btn-ghost"
-                    onClick={() => {
-                      if (onSelectModel) onSelectModel(model.id);
-                    }}
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--color-carbony-black)'
-                    }}
-                  >
-                    <span>EXPLORE MODEL DETAILS</span>
-                    <ArrowRight size={14} />
-                  </a>
-                </div>
-              </div>
-            </div>
+              model={model}
+              onSelectModel={onSelectModel}
+            />
           ))}
         </div>
       </div>

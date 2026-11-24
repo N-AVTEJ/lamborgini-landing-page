@@ -1,12 +1,113 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Play, Square, Activity } from 'lucide-react';
 import { defenderV8Engine } from '../utils/engineAudio';
+
+// Smooth Count-Up Telemetry Metric Component
+function TelemetryCard({ label, unit, subtext, targetNumber, decimals = 0 }) {
+  const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+  const [displayNumber, setDisplayNumber] = useState(isTest ? targetNumber : 0);
+  const cardRef = useRef(null);
+  const [hasAnimated, setHasAnimated] = useState(isTest);
+
+  useEffect(() => {
+    if (isTest || hasAnimated) return;
+
+    let animId;
+    const startVal = 0;
+    const endVal = targetNumber;
+    const duration = 1400; // 1.4s smooth count up
+    let startTime = null;
+
+    const runCountUp = (now) => {
+      if (!startTime) startTime = now;
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = startVal + (endVal - startVal) * eased;
+      setDisplayNumber(current);
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(runCountUp);
+      } else {
+        setDisplayNumber(endVal);
+        setHasAnimated(true);
+      }
+    };
+
+    if (typeof IntersectionObserver !== 'undefined' && cardRef.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0] && entries[0].isIntersecting) {
+            animId = requestAnimationFrame(runCountUp);
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(cardRef.current);
+      return () => {
+        observer.disconnect();
+        if (animId) cancelAnimationFrame(animId);
+      };
+    } else {
+      animId = requestAnimationFrame(runCountUp);
+      return () => {
+        if (animId) cancelAnimationFrame(animId);
+      };
+    }
+  }, [targetNumber, isTest, hasAnimated]);
+
+  const formattedNum = isTest
+    ? (decimals === 1 ? targetNumber.toFixed(1) : targetNumber.toLocaleString())
+    : (decimals === 1 ? displayNumber.toFixed(1) : Math.round(displayNumber).toLocaleString());
+
+  const fullDisplay = `${formattedNum} ${unit}`;
+
+  return (
+    <div
+      ref={cardRef}
+      className="telemetry-card"
+      style={{
+        backgroundColor: 'var(--surface-carbon-deep)',
+        padding: 'var(--spacing-32)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <div className="telemetry-hairline-accent" />
+      <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: '44px',
+          color: 'var(--color-pearl-white)',
+          lineHeight: 1,
+          marginBottom: '8px',
+          fontVariantNumeric: 'tabular-nums'
+        }}
+      >
+        {fullDisplay}
+      </div>
+      <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
+        {subtext}
+      </div>
+    </div>
+  );
+}
 
 export default function ShowroomSpotlightStage() {
   const [spotlightMode, setSpotlightMode] = useState('theater'); // 'theater' | 'ambient' | 'stealth'
   const [currentAngle, setCurrentAngle] = useState('aero'); // 'aero' | 'cockpit' | 'studio'
   const [engineRunning, setEngineRunning] = useState(false);
   const [currentRPM, setCurrentRPM] = useState(0);
+  const [peakRPM, setPeakRPM] = useState(0);
+
+  // Dynamic Spotlight Beam mouse follow & ambient drift
+  const [beamPos, setBeamPos] = useState({ x: 50, tilt: 0 });
+  const [isHoveringStage, setIsHoveringStage] = useState(false);
+  const stageRef = useRef(null);
 
   const angleImages = {
     aero: {
@@ -26,14 +127,45 @@ export default function ShowroomSpotlightStage() {
     }
   };
 
+  // Ambient gentle beam drift when mouse is not actively hovering
+  useEffect(() => {
+    if (isHoveringStage) return;
+    let animId;
+    const start = performance.now();
+    const driftLoop = (now) => {
+      const elapsed = (now - start) / 1000;
+      const x = 50 + Math.sin(elapsed * 0.7) * 6;
+      const tilt = Math.sin(elapsed * 0.7) * 2.5;
+      setBeamPos({ x, tilt });
+      animId = requestAnimationFrame(driftLoop);
+    };
+    animId = requestAnimationFrame(driftLoop);
+    return () => cancelAnimationFrame(animId);
+  }, [isHoveringStage]);
+
+  const handleStageMouseMove = (e) => {
+    if (!stageRef.current) return;
+    const rect = stageRef.current.getBoundingClientRect();
+    const x = Math.max(15, Math.min(85, ((e.clientX - rect.left) / rect.width) * 100));
+    const tilt = ((x - 50) / 35) * 12; // tilt between -12deg and +12deg
+    setBeamPos({ x, tilt });
+    setIsHoveringStage(true);
+  };
+
+  const handleStageMouseLeave = () => {
+    setIsHoveringStage(false);
+  };
+
   const handleToggleEngine = () => {
     if (engineRunning) {
       defenderV8Engine.stop();
       setEngineRunning(false);
       setCurrentRPM(0);
+      setPeakRPM(0);
     } else {
       defenderV8Engine.startIdle((rpm) => {
         setCurrentRPM(rpm);
+        setPeakRPM((prev) => Math.max(prev, rpm));
       });
       setEngineRunning(true);
     }
@@ -43,6 +175,7 @@ export default function ShowroomSpotlightStage() {
     if (!engineRunning) {
       defenderV8Engine.startIdle((rpm) => {
         setCurrentRPM(rpm);
+        setPeakRPM((prev) => Math.max(prev, rpm));
       });
       setEngineRunning(true);
       setTimeout(() => {
@@ -59,9 +192,14 @@ export default function ShowroomSpotlightStage() {
     };
   }, []);
 
+  const isNearRedline = currentRPM >= 6800;
+
   return (
     <section
       id="showroom-spotlight"
+      ref={stageRef}
+      onMouseMove={handleStageMouseMove}
+      onMouseLeave={handleStageMouseLeave}
       aria-label="Showroom Spotlight Stage"
       className="surface-pure-black showroom-stage-wrap"
       style={{
@@ -76,8 +214,18 @@ export default function ShowroomSpotlightStage() {
         borderBottom: '1px solid var(--color-graphite-border)'
       }}
     >
-      {/* Downward Theatrical Overhead Spotlight Beam */}
-      <div className={`showroom-spotlight-beam ${spotlightMode}`} />
+      {/* Downward Theatrical Overhead Spotlight Beam with Dynamic Follow */}
+      <div
+        className={`showroom-spotlight-beam ${spotlightMode}`}
+        style={{
+          left: `${beamPos.x}%`,
+          transform: `translateX(-50%) rotate(${beamPos.tilt}deg)`,
+          transformOrigin: 'top center',
+          transition: isHoveringStage
+            ? 'left 0.15s ease-out, transform 0.15s ease-out, opacity 0.5s ease'
+            : 'opacity 0.5s ease, background 0.5s ease'
+        }}
+      />
 
       <div className="defender-container lambo-container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Section Heading Block — Dark Stage Variant */}
@@ -183,53 +331,88 @@ export default function ShowroomSpotlightStage() {
               </div>
             </div>
 
-            {/* Live RPM Digital HUD Overlay (when engine is running) */}
+            {/* Live RPM Digital HUD Overlay with Peak Hold and Rev-Limit Shift Flash */}
             {engineRunning && (
               <div
                 style={{
                   position: 'absolute',
                   top: '24px',
                   right: '24px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                  border: '1px solid var(--color-graphite-border)',
-                  padding: '12px 20px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.90)',
+                  border: isNearRedline ? '1px solid var(--color-giallo-vivo)' : '1px solid var(--color-graphite-border)',
+                  padding: '14px 22px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
-                  zIndex: 5
+                  zIndex: 5,
+                  minWidth: '220px',
+                  transition: 'border-color 0.15s ease'
                 }}
               >
-                <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                  4.4L TWIN-TURBO V8 TELEMETRY
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
+                    4.4L TWIN-TURBO V8 TELEMETRY
+                  </span>
+                  <span style={{ fontSize: '10px', color: 'var(--color-giallo-vivo)', letterSpacing: '0.0230em' }}>
+                    PEAK: {peakRPM.toLocaleString()} RPM
+                  </span>
                 </div>
+
+                {/* Rev-Limit Shift Flash Banner */}
+                {isNearRedline && (
+                  <div className="hud-shift-alert" style={{ marginBottom: '6px' }}>
+                    REV LIMIT · SHIFT DEFENDER V8
+                  </div>
+                )}
+
                 <div
                   style={{
-                    fontSize: '32px',
-                    color: 'var(--color-pearl-white)',
+                    fontSize: '34px',
+                    color: isNearRedline ? 'var(--color-giallo-vivo)' : 'var(--color-pearl-white)',
                     lineHeight: 1.1,
-                    fontWeight: 400,
-                    margin: '4px 0'
+                    fontVariantNumeric: 'tabular-nums',
+                    margin: '2px 0'
                   }}
                 >
                   {currentRPM.toLocaleString()} <span style={{ fontSize: '14px', color: 'var(--color-steel-mid)' }}>RPM</span>
                 </div>
-                {/* Visual Equalizer / Soundwave */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', height: '18px', gap: '3px' }}>
-                  {[...Array(12)].map((_, i) => {
-                    const threshold = 800 + i * 530;
+
+                {/* 16-Segment Tachometer Visualizer with Peak Hold Needle */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', height: '20px', gap: '3px', marginTop: '4px' }}>
+                  {[...Array(16)].map((_, i) => {
+                    const threshold = 650 + i * 410;
                     const isActive = currentRPM >= threshold;
+                    const isPeak = peakRPM >= threshold && peakRPM < threshold + 410;
+                    const isRedlineZone = i >= 13;
+
                     return (
-                      <span
+                      <div
                         key={i}
-                        className={`tach-bar ${isActive ? 'active' : ''}`}
                         style={{
-                          backgroundColor: 'var(--color-pearl-white)',
-                          height: isActive ? `${6 + (i * 1.2)}px` : '4px',
-                          opacity: isActive ? 1 : 0.35
+                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-end',
+                          height: '100%'
                         }}
-                      />
+                      >
+                        {isPeak && <div className="peak-hold-marker" />}
+                        <span
+                          className={`tach-bar ${isActive ? 'active' : ''}`}
+                          style={{
+                            backgroundColor: isRedlineZone ? 'var(--color-giallo-vivo)' : 'var(--color-pearl-white)',
+                            height: isActive ? `${6 + (i * 0.9)}px` : '4px',
+                            opacity: isActive ? 1 : 0.25,
+                            marginRight: 0
+                          }}
+                        />
+                      </div>
                     );
                   })}
+                </div>
+
+                <div style={{ fontSize: '10px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginTop: '6px' }}>
+                  ACTIVE SPORT EXHAUST: QUAD VALVES UNLEASHED
                 </div>
               </div>
             )}
@@ -337,64 +520,52 @@ export default function ShowroomSpotlightStage() {
           </div>
         </div>
 
-        {/* Monolithic Specification Panels: 4 Equal Units with Hairline Borders */}
+        {/* Monolithic Telemetry Specification Panels with Smooth Count-Up Animations */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '1px',
             backgroundColor: 'var(--color-graphite-border)',
             marginTop: 'var(--spacing-40)',
             border: '1px solid var(--color-graphite-border)'
           }}
         >
-          <div style={{ backgroundColor: 'var(--surface-carbon-deep)', padding: 'var(--spacing-32)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
-              COMBINED SYSTEM POWER
-            </div>
-            <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              635 PS
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              4.4L TWIN-TURBO MHEV V8 ENGINE
-            </div>
-          </div>
+          <TelemetryCard
+            label="COMBINED SYSTEM POWER"
+            unit="PS"
+            targetNumber={635}
+            subtext="4.4L TWIN-TURBO MHEV V8 ENGINE"
+          />
 
-          <div style={{ backgroundColor: 'var(--surface-carbon-deep)', padding: 'var(--spacing-32)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
-              0–100 KM/H ACCELERATION
-            </div>
-            <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              3.8 SEC
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              DYNAMIC LAUNCH MODE WITH 750 NM TORQUE
-            </div>
-          </div>
+          <TelemetryCard
+            label="0–100 KM/H ACCELERATION"
+            unit="SEC"
+            targetNumber={3.8}
+            decimals={1}
+            subtext="DYNAMIC LAUNCH MODE WITH 750 NM TORQUE"
+          />
 
-          <div style={{ backgroundColor: 'var(--surface-carbon-deep)', padding: 'var(--spacing-32)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
-              MAXIMUM VELOCITY
-            </div>
-            <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              250 KM/H
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              6D DYNAMICS HYDRAULIC INTERLINKED SUSPENSION
-            </div>
-          </div>
+          <TelemetryCard
+            label="MAXIMUM VELOCITY"
+            unit="KM/H"
+            targetNumber={250}
+            subtext="6D DYNAMICS HYDRAULIC INTERLINKED SUSPENSION"
+          />
 
-          <div style={{ backgroundColor: 'var(--surface-carbon-deep)', padding: 'var(--spacing-32)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em', marginBottom: '8px' }}>
-              PEAK ENGINE REDLINE
-            </div>
-            <div style={{ fontSize: '48px', color: 'var(--color-pearl-white)', lineHeight: 1, marginBottom: '8px' }}>
-              7,200 RPM
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-              TUNED TWIN-TURBO INDUCTION WITH ACTIVE EXHAUST
-            </div>
-          </div>
+          <TelemetryCard
+            label="WADING DEPTH CAPACITY"
+            unit="MM"
+            targetNumber={1000}
+            subtext="CLASS-EXCLUSIVE EXTREME TERRAIN WATER FORDING"
+          />
+
+          <TelemetryCard
+            label="PEAK ENGINE REDLINE"
+            unit="RPM"
+            targetNumber={7200}
+            subtext="TUNED TWIN-TURBO INDUCTION WITH ACTIVE EXHAUST"
+          />
         </div>
 
         {/* Chassis Architecture Engineering Note */}
