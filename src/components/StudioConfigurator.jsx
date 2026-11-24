@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Palette, Check, RefreshCw, Sliders, Maximize2 } from 'lucide-react';
+import { useReducedMotion } from '../utils/useReducedMotion';
 
 const DEFENDER_PALETTE = [
   { id: 'giallo-vivo', name: 'GIALLO VIVO', hex: '#ffc000', badge: 'HERO OCTA LAUNCH SPEC' },
@@ -120,6 +121,7 @@ export default function StudioConfigurator({
   const currentColor = propCurrentColor !== undefined ? propCurrentColor : internalColor;
   const selectedPresetId = propSelectedPresetId !== undefined ? propSelectedPresetId : internalPresetId;
 
+  const prefersReducedMotion = useReducedMotion();
   const hasWebGL = useMemo(() => canUseWebGL(), []);
 
   const handleSelectPreset = (swatch) => {
@@ -166,73 +168,97 @@ export default function StudioConfigurator({
         touchAction: 'none'
       }}
     >
-      {/* 3D Canvas Viewport */}
+      {/* 3D Canvas / Video Viewport */}
       <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '380px', touchAction: 'none' }}>
-        {hasWebGL ? (
-          <Canvas
-            shadows
-            camera={{ position: [3.8, 1.6, 3.8], fov: 42 }}
-            style={{ width: '100%', height: '100%', backgroundColor: '#0e0e0e' }}
-            onPointerDown={() => setAutoRotate(false)}
-          >
-            {/* Neutral Studio HDRI / Photo Studio Lighting Rig */}
-            <ambientLight intensity={0.7} color="#ffffff" />
-            <directionalLight position={[0, 7, 0]} intensity={1.4} color="#ffffff" />
-            <directionalLight position={[4, 3.5, 3]} intensity={1.6} color="#ffffff" />
-            <directionalLight position={[-4, 2.5, -2]} intensity={0.9} color="#e5effa" />
-            <directionalLight position={[-2, 3, 4]} intensity={1.1} color="#ffffff" />
-
-            <Suspense fallback={null}>
-              <Defender3DModel targetColorHex={currentColor} />
-              <StudioStageFloor />
-            </Suspense>
-
-            {/* OrbitControls: Drag rotate, Scroll zoom, Clamped vertical angle */}
-            <OrbitControls
-              enablePan={false}
-              minDistance={2.8}
-              maxDistance={7.5}
-              minPolarAngle={Math.PI / 6}
-              maxPolarAngle={Math.PI / 2.05}
-              autoRotate={autoRotate}
-              autoRotateSpeed={0.8}
-            />
-          </Canvas>
-        ) : (
-          /* High-fidelity Fallback Stage for test runner & non-WebGL environments */
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'relative',
-              backgroundColor: '#111111',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden'
-            }}
-          >
+        {/* studio-turntable: STUDIO tab background/base layer */}
+        <div
+          className="studio-turntable-base-layer"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'hidden',
+            zIndex: 1
+          }}
+        >
+          {prefersReducedMotion ? (
             <img
-              src="/images/defender-90-studio.jpg"
-              alt="Defender Solihull Studio 3D Configurator"
+              src="/videos/studio-turntable-poster.jpg"
+              alt="Defender Solihull Studio Turntable"
+              className="studio-turntable-poster"
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
-                filter: 'contrast(1.05) brightness(1.02)'
+                objectFit: 'cover'
               }}
             />
-            {/* Live Color Accent Tint Overlay */}
-            <div
+          ) : (
+            <video
+              className="studio-turntable-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/videos/studio-turntable-poster.jpg"
               style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: currentColor,
-                mixBlendMode: 'color',
-                opacity: 0.35,
-                transition: 'background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
               }}
-            />
+            >
+              <source src="/videos/studio-turntable.webm" type="video/webm" />
+              <source src="/videos/studio-turntable.mp4" type="video/mp4" />
+            </video>
+          )}
+
+          {/* Color-swatch configurator sits as an overlay on top (tint/filter overlay, the base video itself never changes color) */}
+          <div
+            className="studio-swatch-tint-overlay"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: currentColor,
+              mixBlendMode: 'color',
+              opacity: 0.38,
+              pointerEvents: 'none',
+              transition: 'background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          />
+        </div>
+
+        {/* Real 3D Material Swap path if WebGL is supported */}
+        {hasWebGL && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+            <Canvas
+              shadows
+              gl={{ alpha: true }}
+              camera={{ position: [3.8, 1.6, 3.8], fov: 42 }}
+              style={{ width: '100%', height: '100%', background: 'transparent' }}
+              onPointerDown={() => setAutoRotate(false)}
+            >
+              {/* Neutral Studio HDRI / Photo Studio Lighting Rig */}
+              <ambientLight intensity={0.7} color="#ffffff" />
+              <directionalLight position={[0, 7, 0]} intensity={1.4} color="#ffffff" />
+              <directionalLight position={[4, 3.5, 3]} intensity={1.6} color="#ffffff" />
+              <directionalLight position={[-4, 2.5, -2]} intensity={0.9} color="#e5effa" />
+              <directionalLight position={[-2, 3, 4]} intensity={1.1} color="#ffffff" />
+
+              <Suspense fallback={null}>
+                <Defender3DModel targetColorHex={currentColor} />
+                <StudioStageFloor />
+              </Suspense>
+
+              {/* OrbitControls: Drag rotate, Scroll zoom, Clamped vertical angle */}
+              <OrbitControls
+                enablePan={false}
+                minDistance={2.8}
+                maxDistance={7.5}
+                minPolarAngle={Math.PI / 6}
+                maxPolarAngle={Math.PI / 2.05}
+                autoRotate={autoRotate}
+                autoRotateSpeed={0.8}
+              />
+            </Canvas>
           </div>
         )}
 
