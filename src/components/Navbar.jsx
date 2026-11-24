@@ -10,27 +10,27 @@ export default function Navbar() {
     {
       category: 'MODELS',
       links: [
-        { name: 'REVUELTO', desc: 'V12 HPEV HYBRID SUPER SPORTS CAR — 1015 CV' },
-        { name: 'TEMERARIO', desc: 'V8 TWIN-TURBO HPEV — 920 CV / 10,000 RPM' },
-        { name: 'URUS SE', desc: 'SUPER SUV PLUG-IN HYBRID — 800 CV' },
-        { name: 'HURACÁN STERRATO', desc: 'ALL-TERRAIN V10 NATURALLY ASPIRATED' },
-        { name: 'LIMITED SERIES', desc: 'COUNTACH LPI 800-4 & FEW-OFFS' }
+        { name: 'DEFENDER OCTA', desc: '4.4L TWIN-TURBO V8 MHEV — 635 PS / 250 KM/H' },
+        { name: 'DEFENDER 110', desc: '5-DOOR EXPEDITION BENCHMARK — 525 PS V8' },
+        { name: 'DEFENDER 90', desc: 'AGILE 3-DOOR SHORT WHEELBASE ROCK CRAWLER' },
+        { name: 'DEFENDER 130', desc: '8-PASSENGER GRAND EXPEDITION EXPLORER' },
+        { name: 'DEFENDER TROPHY', desc: 'LIMITED WORKS V8 EXPEDITION RECREATION' }
       ]
     },
     {
-      category: 'MOTORSPORT',
+      category: 'EXPEDITIONS & CAPABILITY',
       links: [
-        { name: 'SC63 LMDH', desc: 'FIA WEC & IMSA GTP HYBRID HYPERCAR' },
-        { name: 'SUPER TROFEO', desc: 'THE FASTEST ONE-MAKE CHAMPIONSHIP' },
-        { name: 'SQUADRA CORSE', desc: 'FACTORY RACING & DRIVER ACADEMY' }
+        { name: 'DEFENDER EXPEDITION TROPHY', desc: 'THE WORLD\'S TOUGHEST OVERLAND TRIALS' },
+        { name: '6D DYNAMICS', desc: 'HYDRAULIC INTERLINKED SUSPENSION TECH' },
+        { name: 'TERRAIN RESPONSE 2', desc: 'ALL-SURFACE ALL-WHEEL DRIVE INTELLIGENCE' }
       ]
     },
     {
-      category: 'HERITAGE & INNOVATION',
+      category: 'HERITAGE & BESPOKE',
       links: [
-        { name: 'DIREZIONE COR TAURI', desc: 'DECARBONIZATION & HYBRID ROADMAP' },
-        { name: 'POLO STORICO', desc: 'ARCHIVE & HISTORIC RESTORATION' },
-        { name: 'CENTRO STILE', desc: 'DESIGN LANGUAGE & AERODYNAMICS' }
+        { name: 'SOLIHULL CLASSIC WORKS', desc: '75 YEARS OF DEFENDER 4X4 HERITAGE' },
+        { name: 'SV BESPOKE', desc: 'COMMISSIONED PERSONALIZATION STUDIO' },
+        { name: 'DEFENDER ARCHIVE', desc: 'SERIES I TO MODERN EXPEDITION ICONS' }
       ]
     }
   ];
@@ -81,7 +81,7 @@ export default function Navbar() {
           </span>
         </button>
 
-        {/* Center: Lamborghini Bull Logo (White Monochrome) */}
+        {/* Center: Land Rover Defender Emblem & Wordmark (White Monochrome) */}
         <a
           href="#"
           style={{
@@ -90,23 +90,21 @@ export default function Navbar() {
             gap: '10px',
             color: '#ffffff'
           }}
-          aria-label="Lamborghini Homepage"
+          aria-label="Defender Homepage"
         >
-          {/* Authentic Silhouette Bull Shield Vector */}
-          <svg width="28" height="34" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Outer Shield */}
-            <polygon points="50,2 96,18 86,102 50,118 14,102 4,18" stroke="#ffffff" strokeWidth="4" fill="#202020" />
-            {/* Bull Silhouette */}
-            <path
-              d="M32 38 C36 34, 44 32, 50 32 C56 32, 64 34, 68 38 C72 42, 70 48, 65 52 C61 55, 59 58, 63 64 C67 70, 71 78, 69 86 C67 92, 58 95, 50 95 C42 95, 33 92, 31 86 C29 78, 33 70, 37 64 C41 58, 39 55, 35 52 C30 48, 28 42, 32 38 Z"
-              fill="#ffffff"
-            />
-            {/* Horns & Shoulders */}
-            <path d="M26 40 Q22 28 34 26 Q38 32 36 40 Z" fill="#ffffff" />
-            <path d="M74 40 Q78 28 66 26 Q62 32 64 40 Z" fill="#ffffff" />
+          {/* Authentic Defender Geometric Shield Vector */}
+          <svg width="30" height="30" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Outer Defender Octagonal/Geometric Shield */}
+            <polygon points="50,4 96,22 96,78 50,96 4,78 4,22" stroke="#ffffff" strokeWidth="4" fill="#202020" />
+            {/* Inner Bold Geometric 4x4 Grid Icon */}
+            <rect x="22" y="32" width="56" height="36" rx="0" stroke="#ffffff" strokeWidth="3.5" fill="none" />
+            <line x1="22" y1="50" x2="78" y2="50" stroke="#ffffff" strokeWidth="3" />
+            <line x1="42" y1="32" x2="42" y2="68" stroke="#ffffff" strokeWidth="3" />
+            <line x1="58" y1="32" x2="58" y2="68" stroke="#ffffff" strokeWidth="3" />
+            <circle cx="50" cy="50" r="3" fill="#ffc000" />
           </svg>
-          <span style={{ fontSize: '14px', letterSpacing: '0.0230em', fontWeight: 400, display: 'none' }} className="brand-text">
-            AUTOMOBILI LAMBORGHINI
+          <span style={{ fontSize: '16px', letterSpacing: '0.08em', fontWeight: 400 }} className="brand-text">
+            DEFENDER
           </span>
         </a>
 
@@ -133,7 +131,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setSearchOpen(true)}
-            title="Search Lamborghini Catalog"
+            title="Search Defender Catalog"
             aria-label="Open search dialog"
             style={{
               background: 'none',
@@ -236,7 +234,7 @@ export default function Navbar() {
               }}
             >
               <div style={{ fontSize: '12px', color: 'var(--color-steel-mid)' }}>
-                SANT'AGATA BOLOGNESE, BOLOGNA, ITALY · EST. 1963
+                SOLIHULL, WEST MIDLANDS, UNITED KINGDOM · EST. 1948
               </div>
               <div style={{ display: 'flex', gap: '24px' }}>
                 <a
@@ -276,7 +274,7 @@ export default function Navbar() {
           <div style={{ width: '100%', maxWidth: '720px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '12px', color: 'var(--color-steel-mid)', letterSpacing: '0.0230em' }}>
-                SEARCH SANT'AGATA ARCHIVE &amp; LINEUP
+                SEARCH SOLIHULL ARCHIVE &amp; LINEUP
               </span>
               <button
                 onClick={() => setSearchOpen(false)}
@@ -291,7 +289,7 @@ export default function Navbar() {
               <input
                 type="text"
                 autoFocus
-                placeholder="TYPE MODEL NAME, HORSEPOWER, OR MOTORSPORT..."
+                placeholder="TYPE MODEL NAME, HORSEPOWER, OR EXPEDITION..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{

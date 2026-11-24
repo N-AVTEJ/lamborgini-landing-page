@@ -1,5 +1,5 @@
-// Web Audio API Synthesizer for Lamborghini Naturally Aspirated V12 Engine
-class V12EngineSynthesizer {
+// Web Audio API Synthesizer for Land Rover Defender Twin-Turbo V8 Engine
+class DefenderV8EngineSynthesizer {
   constructor() {
     this.ctx = null;
     this.isPlaying = false;
@@ -19,8 +19,8 @@ class V12EngineSynthesizer {
     }
   }
 
-  // Generate distortion curve for exhaust growl
-  makeDistortionCurve(amount = 20) {
+  // Generate distortion curve for deep V8 exhaust growl
+  makeDistortionCurve(amount = 25) {
     const k = typeof amount === 'number' ? amount : 50;
     const n_samples = 44100;
     const curve = new Float32Array(n_samples);
@@ -43,36 +43,36 @@ class V12EngineSynthesizer {
     // Master Gain
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.setValueAtTime(0, t);
-    this.masterGain.gain.linearRampToValueAtTime(0.35, t + 0.6);
+    this.masterGain.gain.linearRampToValueAtTime(0.38, t + 0.5);
     this.masterGain.connect(this.ctx.destination);
 
-    // Distortion shaper for Italian exhaust edge
+    // Distortion shaper for deep British V8 growl
     this.shaper = this.ctx.createWaveShaper();
-    this.shaper.curve = this.makeDistortionCurve(15);
+    this.shaper.curve = this.makeDistortionCurve(20);
     this.shaper.oversample = '4x';
     this.shaper.connect(this.masterGain);
 
     // Exhaust resonator lowpass filter
     this.exhaustFilter = this.ctx.createBiquadFilter();
     this.exhaustFilter.type = 'lowpass';
-    this.exhaustFilter.frequency.setValueAtTime(450, t);
-    this.exhaustFilter.Q.setValueAtTime(2.5, t);
+    this.exhaustFilter.frequency.setValueAtTime(380, t);
+    this.exhaustFilter.Q.setValueAtTime(3.0, t);
     this.exhaustFilter.connect(this.shaper);
 
-    // Primary V12 Firing Osc (Sawtooth)
+    // Primary V8 Firing Osc (Crossplane Sawtooth)
     this.osc1 = this.ctx.createOscillator();
     this.osc1.type = 'sawtooth';
-    this.osc1.frequency.setValueAtTime(85, t); // ~850 RPM idle
+    this.osc1.frequency.setValueAtTime(55, t); // ~650 RPM crossplane idle pulse
 
-    // Secondary Harmonic Osc (Square for cylinder pulse punch)
+    // Secondary Sub-Harmonic Rumble Osc (Deep engine block resonance)
     this.osc2 = this.ctx.createOscillator();
     this.osc2.type = 'triangle';
-    this.osc2.frequency.setValueAtTime(42.5, t); // Sub-harmonic crank rumble
+    this.osc2.frequency.setValueAtTime(27.5, t); // Sub-bass crank rumble
 
-    // Third high-frequency induction Osc
+    // Third Osc for turbo induction whistle / supercharger whine
     this.osc3 = this.ctx.createOscillator();
     this.osc3.type = 'sawtooth';
-    this.osc3.frequency.setValueAtTime(170, t); // 2nd order harmonic
+    this.osc3.frequency.setValueAtTime(110, t); // 2nd order harmonic
 
     // Connect oscillators to filter
     this.osc1.connect(this.exhaustFilter);
@@ -83,7 +83,7 @@ class V12EngineSynthesizer {
     this.osc2.start(t);
     this.osc3.start(t);
 
-    this.currentRPM = 950;
+    this.currentRPM = 750;
     this.updateRPMLoop();
   }
 
@@ -92,48 +92,48 @@ class V12EngineSynthesizer {
     this.isRevving = true;
     const t = this.ctx.currentTime;
 
-    // Aggressive throttle sweep up to 9,500 RPM
-    // Idle 85Hz -> Redline ~950Hz
+    // Throttle sweep up to 7,200 RPM redline
+    // Idle 55Hz -> Redline ~600Hz
     this.osc1.frequency.cancelScheduledValues(t);
     this.osc2.frequency.cancelScheduledValues(t);
     this.osc3.frequency.cancelScheduledValues(t);
     this.exhaustFilter.frequency.cancelScheduledValues(t);
     this.masterGain.gain.cancelScheduledValues(t);
 
-    // Acceleration Ramp (0.7s)
-    this.osc1.frequency.linearRampToValueAtTime(920, t + 0.8);
-    this.osc2.frequency.linearRampToValueAtTime(460, t + 0.8);
-    this.osc3.frequency.linearRampToValueAtTime(1840, t + 0.8);
-    this.exhaustFilter.frequency.exponentialRampToValueAtTime(3200, t + 0.8);
-    this.masterGain.gain.linearRampToValueAtTime(0.55, t + 0.8);
+    // Acceleration Ramp (0.75s)
+    this.osc1.frequency.linearRampToValueAtTime(580, t + 0.75);
+    this.osc2.frequency.linearRampToValueAtTime(290, t + 0.75);
+    this.osc3.frequency.linearRampToValueAtTime(1160, t + 0.75);
+    this.exhaustFilter.frequency.exponentialRampToValueAtTime(2600, t + 0.75);
+    this.masterGain.gain.linearRampToValueAtTime(0.55, t + 0.75);
 
-    // Hold at limiter briefly (0.2s) with slight flutter
-    this.osc1.frequency.setValueAtTime(940, t + 0.85);
-    this.osc1.frequency.setValueAtTime(900, t + 0.95);
+    // Hold at limiter briefly with V8 flutter
+    this.osc1.frequency.setValueAtTime(600, t + 0.8);
+    this.osc1.frequency.setValueAtTime(560, t + 0.9);
 
     // Deceleration Overrun return to idle (1.2s)
-    this.osc1.frequency.exponentialRampToValueAtTime(85, t + 2.2);
-    this.osc2.frequency.exponentialRampToValueAtTime(42.5, t + 2.2);
-    this.osc3.frequency.exponentialRampToValueAtTime(170, t + 2.2);
-    this.exhaustFilter.frequency.exponentialRampToValueAtTime(450, t + 2.2);
-    this.masterGain.gain.linearRampToValueAtTime(0.35, t + 2.2);
+    this.osc1.frequency.exponentialRampToValueAtTime(55, t + 2.1);
+    this.osc2.frequency.exponentialRampToValueAtTime(27.5, t + 2.1);
+    this.osc3.frequency.exponentialRampToValueAtTime(110, t + 2.1);
+    this.exhaustFilter.frequency.exponentialRampToValueAtTime(380, t + 2.1);
+    this.masterGain.gain.linearRampToValueAtTime(0.38, t + 2.1);
 
     // Animate RPM value
     const startT = performance.now();
     const animateRev = (now) => {
       const elapsed = (now - startT) / 1000;
-      if (elapsed < 0.8) {
+      if (elapsed < 0.75) {
         // Accelerating
-        this.currentRPM = Math.round(950 + (elapsed / 0.8) * 8550);
-      } else if (elapsed < 1.0) {
+        this.currentRPM = Math.round(750 + (elapsed / 0.75) * 6450);
+      } else if (elapsed < 0.95) {
         // Limiter bounce
-        this.currentRPM = Math.round(9300 + Math.random() * 200);
-      } else if (elapsed < 2.2) {
+        this.currentRPM = Math.round(7050 + Math.random() * 150);
+      } else if (elapsed < 2.1) {
         // Falling back to idle
-        const decay = (elapsed - 1.0) / 1.2;
-        this.currentRPM = Math.round(9500 - decay * 8550);
+        const decay = (elapsed - 0.95) / 1.15;
+        this.currentRPM = Math.round(7200 - decay * 6450);
       } else {
-        this.currentRPM = 950;
+        this.currentRPM = 750;
         this.isRevving = false;
         return;
       }
@@ -167,8 +167,8 @@ class V12EngineSynthesizer {
     const loop = () => {
       if (!this.isPlaying) return;
       if (!this.isRevving) {
-        // Subtle idle flutter between 920 and 970 RPM
-        this.currentRPM = Math.round(945 + (Math.sin(Date.now() / 200) * 25));
+        // Subtle V8 idle flutter between 720 and 780 RPM
+        this.currentRPM = Math.round(745 + (Math.sin(Date.now() / 250) * 20));
         if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
       }
       this.animFrameId = requestAnimationFrame(loop);
@@ -177,4 +177,6 @@ class V12EngineSynthesizer {
   }
 }
 
-export const v12Engine = new V12EngineSynthesizer();
+export const defenderV8Engine = new DefenderV8EngineSynthesizer();
+// Backwards compatibility alias
+export const v12Engine = defenderV8Engine;
