@@ -22,8 +22,11 @@ function Defender3DModel({ targetColorHex }) {
     const clone = scene.clone(true);
     clone.traverse((child) => {
       if (child.isMesh && child.material) {
-        // Deep clone material so body paint is independent
-        child.material = child.material.clone();
+        if (Array.isArray(child.material)) {
+          child.material = child.material.map((m) => m.clone());
+        } else {
+          child.material = child.material.clone();
+        }
       }
     });
     return clone;
@@ -34,8 +37,11 @@ function Defender3DModel({ targetColorHex }) {
     const mats = [];
     clonedScene.traverse((child) => {
       if (child.isMesh && child.material) {
-        if (child.material.name === 'Defender_Body') {
-          mats.push(child.material);
+        const list = Array.isArray(child.material) ? child.material : [child.material];
+        for (const mat of list) {
+          if (mat.name === 'Defender_Body') {
+            mats.push(mat);
+          }
         }
       }
     });
@@ -99,23 +105,40 @@ function canUseWebGL() {
   }
 }
 
-export default function StudioConfigurator({ initialColor = '#ffc000' }) {
-  const [currentColor, setCurrentColor] = useState(initialColor);
-  const [selectedPresetId, setSelectedPresetId] = useState('giallo-vivo');
+export default function StudioConfigurator({
+  initialColor = '#ffc000',
+  currentColor: propCurrentColor,
+  onColorChange,
+  selectedPresetId: propSelectedPresetId,
+  onSelectPreset
+}) {
+  const [internalColor, setInternalColor] = useState(initialColor);
+  const [internalPresetId, setInternalPresetId] = useState('giallo-vivo');
   const [autoRotate, setAutoRotate] = useState(true);
   const colorInputRef = useRef(null);
+
+  const currentColor = propCurrentColor !== undefined ? propCurrentColor : internalColor;
+  const selectedPresetId = propSelectedPresetId !== undefined ? propSelectedPresetId : internalPresetId;
 
   const hasWebGL = useMemo(() => canUseWebGL(), []);
 
   const handleSelectPreset = (swatch) => {
-    setSelectedPresetId(swatch.id);
-    setCurrentColor(swatch.hex);
+    if (onSelectPreset) {
+      onSelectPreset(swatch);
+    } else {
+      setInternalPresetId(swatch.id);
+      setInternalColor(swatch.hex);
+    }
   };
 
   const handleCustomHexChange = (e) => {
     const hex = e.target.value;
-    setCurrentColor(hex);
-    setSelectedPresetId('custom');
+    if (onColorChange) {
+      onColorChange(hex);
+    } else {
+      setInternalColor(hex);
+      setInternalPresetId('custom');
+    }
   };
 
   const handleResetCamera = () => {
@@ -139,11 +162,12 @@ export default function StudioConfigurator({ initialColor = '#ffc000' }) {
         backgroundColor: '#0c0c0c',
         overflow: 'hidden',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        touchAction: 'none'
       }}
     >
       {/* 3D Canvas Viewport */}
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '380px' }}>
+      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '380px', touchAction: 'none' }}>
         {hasWebGL ? (
           <Canvas
             shadows

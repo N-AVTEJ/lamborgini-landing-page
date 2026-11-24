@@ -105,9 +105,18 @@ export default function ShowroomSpotlightStage() {
   const [spotlightMode, setSpotlightMode] = useState('theater'); // 'theater' | 'ambient' | 'stealth'
   const [currentAngle, setCurrentAngle] = useState('aero'); // 'aero' | 'cockpit' | 'studio'
   const [previousAngle, setPreviousAngle] = useState(null);
+  const currentAngleRef = useRef('aero');
   const [engineRunning, setEngineRunning] = useState(false);
   const [currentRPM, setCurrentRPM] = useState(0);
   const [peakRPM, setPeakRPM] = useState(0);
+  const [studioColor, setStudioColor] = useState('#ffc000');
+  const [studioPresetId, setStudioPresetId] = useState('giallo-vivo');
+  const switchTimerRef = useRef(null);
+
+  // Keep currentAngleRef in sync
+  useEffect(() => {
+    currentAngleRef.current = currentAngle;
+  }, [currentAngle]);
 
   // Dynamic Spotlight Beam mouse follow & ambient drift
   const [beamPos, setBeamPos] = useState({ x: 50, tilt: 0 });
@@ -134,13 +143,25 @@ export default function ShowroomSpotlightStage() {
   };
 
   const handleSelectAngle = (newAngle) => {
-    if (newAngle === currentAngle) return;
-    setPreviousAngle(currentAngle);
+    if (newAngle === currentAngleRef.current) return;
+    const prev = currentAngleRef.current;
+    currentAngleRef.current = newAngle;
+    if (switchTimerRef.current) {
+      clearTimeout(switchTimerRef.current);
+    }
+    setPreviousAngle(prev);
     setCurrentAngle(newAngle);
-    setTimeout(() => {
+    switchTimerRef.current = setTimeout(() => {
       setPreviousAngle(null);
-    }, 450);
+      switchTimerRef.current = null;
+    }, 500);
   };
+
+  useEffect(() => {
+    return () => {
+      if (switchTimerRef.current) clearTimeout(switchTimerRef.current);
+    };
+  }, []);
 
   // Ambient gentle beam drift when mouse is not actively hovering
   useEffect(() => {
@@ -370,7 +391,7 @@ export default function ShowroomSpotlightStage() {
                 zIndex: currentAngle === 'cockpit' ? 4 : (previousAngle === 'cockpit' ? 3 : 1)
               }}
             >
-              {(currentAngle === 'cockpit' || previousAngle === 'cockpit') && <CockpitSequence />}
+              <CockpitSequence />
             </div>
 
             {/* Perspective Layer 3: STUDIO 3D Configurator */}
@@ -385,7 +406,15 @@ export default function ShowroomSpotlightStage() {
                 zIndex: currentAngle === 'studio' ? 4 : (previousAngle === 'studio' ? 3 : 1)
               }}
             >
-              {(currentAngle === 'studio' || previousAngle === 'studio') && <StudioConfigurator />}
+              <StudioConfigurator
+                currentColor={studioColor}
+                onColorChange={setStudioColor}
+                selectedPresetId={studioPresetId}
+                onSelectPreset={(swatch) => {
+                  setStudioPresetId(swatch.id);
+                  setStudioColor(swatch.hex);
+                }}
+              />
             </div>
 
             {/* Stage Mode & Perspective Badges */}
