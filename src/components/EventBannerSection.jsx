@@ -12,8 +12,9 @@ import { useReducedMotion } from '../utils/useReducedMotion';
  * then a Giallo CTA button below. Right side: confirmed expedition destinations.
  * Padding: 40px top/bottom.
  */
-export default function EventBannerSection({ forceMount = false }) {
-  const prefersReducedMotion = useReducedMotion();
+export default function EventBannerSection({ forceMount = false, forceReducedMotion }) {
+  const systemReducedMotion = useReducedMotion();
+  const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
   const sectionRef = useRef(null);
   const [isInViewport, setIsInViewport] = useState(() => {
     return forceMount || typeof window === 'undefined' || typeof IntersectionObserver === 'undefined';

@@ -111,7 +111,8 @@ export default function StudioConfigurator({
   currentColor: propCurrentColor,
   onColorChange,
   selectedPresetId: propSelectedPresetId,
-  onSelectPreset
+  onSelectPreset,
+  forceReducedMotion
 }) {
   const [internalColor, setInternalColor] = useState(initialColor);
   const [internalPresetId, setInternalPresetId] = useState('giallo-vivo');
@@ -121,7 +122,8 @@ export default function StudioConfigurator({
   const currentColor = propCurrentColor !== undefined ? propCurrentColor : internalColor;
   const selectedPresetId = propSelectedPresetId !== undefined ? propSelectedPresetId : internalPresetId;
 
-  const prefersReducedMotion = useReducedMotion();
+  const systemReducedMotion = useReducedMotion();
+  const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
   const hasWebGL = useMemo(() => canUseWebGL(), []);
 
   const handleSelectPreset = (swatch) => {

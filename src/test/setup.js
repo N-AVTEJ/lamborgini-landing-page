@@ -83,3 +83,39 @@ if (typeof window !== 'undefined' && typeof window.HTMLMediaElement !== 'undefin
   window.HTMLMediaElement.prototype.pause = function () {};
   window.HTMLMediaElement.prototype.load = function () {};
 }
+
+// Polyfill window.matchMedia for JSDOM
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = function (query) {
+    return {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false
+    };
+  };
+}
+
+// Polyfill window.IntersectionObserver for JSDOM
+if (typeof window !== 'undefined' && !window.IntersectionObserver) {
+  class MockIntersectionObserver {
+    constructor(callback) {
+      this.callback = callback;
+      MockIntersectionObserver.instances.push(this);
+    }
+    observe(target) {
+      this.target = target;
+    }
+    unobserve() {}
+    disconnect() {}
+    simulate(isIntersecting = true) {
+      this.callback([{ isIntersecting, target: this.target }]);
+    }
+  }
+  MockIntersectionObserver.instances = [];
+  window.IntersectionObserver = MockIntersectionObserver;
+}
