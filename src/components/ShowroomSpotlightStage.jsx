@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Play, Square, Activity } from 'lucide-react';
 import { defenderV8Engine } from '../utils/engineAudio';
+import CockpitSequence from './CockpitSequence';
+import StudioConfigurator from './StudioConfigurator';
 
 // Smooth Count-Up Telemetry Metric Component
 function TelemetryCard({ label, unit, subtext, targetNumber, decimals = 0 }) {
@@ -102,6 +104,7 @@ function TelemetryCard({ label, unit, subtext, targetNumber, decimals = 0 }) {
 export default function ShowroomSpotlightStage() {
   const [spotlightMode, setSpotlightMode] = useState('theater'); // 'theater' | 'ambient' | 'stealth'
   const [currentAngle, setCurrentAngle] = useState('aero'); // 'aero' | 'cockpit' | 'studio'
+  const [previousAngle, setPreviousAngle] = useState(null);
   const [engineRunning, setEngineRunning] = useState(false);
   const [currentRPM, setCurrentRPM] = useState(0);
   const [peakRPM, setPeakRPM] = useState(0);
@@ -128,6 +131,15 @@ export default function ShowroomSpotlightStage() {
       label: 'SOLIHULL STUDIO STAGE',
       badge: 'CARPATHIAN GREY SATIN FINISH'
     }
+  };
+
+  const handleSelectAngle = (newAngle) => {
+    if (newAngle === currentAngle) return;
+    setPreviousAngle(currentAngle);
+    setCurrentAngle(newAngle);
+    setTimeout(() => {
+      setPreviousAngle(null);
+    }, 450);
   };
 
   // Ambient gentle beam drift when mouse is not actively hovering
@@ -228,7 +240,10 @@ export default function ShowroomSpotlightStage() {
         borderBottom: '1px solid var(--color-graphite-border)'
       }}
     >
-      {/* Downward Theatrical Overhead Spotlight Beam with Dynamic Follow */}
+      {/* 1. Atmospheric Ambient Stage Haze */}
+      <div className="showroom-stage-haze" />
+
+      {/* 2. Softened Downward Overhead Spotlight Beam with Dynamic Follow */}
       <div
         className={`showroom-spotlight-beam ${spotlightMode}`}
         style={{
@@ -236,8 +251,18 @@ export default function ShowroomSpotlightStage() {
           transform: `translateX(-50%) rotate(${beamPos.tilt}deg)`,
           transformOrigin: 'top center',
           transition: isHoveringStage
-            ? 'left 0.15s ease-out, transform 0.15s ease-out, opacity 0.5s ease'
+            ? 'left 0.18s ease-out, transform 0.18s ease-out, opacity 0.5s ease'
             : 'opacity 0.5s ease, background 0.5s ease'
+        }}
+      />
+
+      {/* 3. Soft Floor Specular Pool beneath Vehicle */}
+      <div
+        className="showroom-floor-pool"
+        style={{
+          left: `${45 + beamPos.x * 0.1}%`,
+          transform: `translateX(-50%) scale(${spotlightMode === 'theater' ? 1.05 : spotlightMode === 'ambient' ? 1.2 : 0.85})`,
+          opacity: spotlightMode === 'stealth' ? 0.2 : 0.85
         }}
       />
 
@@ -294,8 +319,9 @@ export default function ShowroomSpotlightStage() {
             overflow: 'hidden'
           }}
         >
-          {/* Main Visual Display */}
+          {/* Main Visual Display: Shared-Element Staging Canvas with Zero-Blank Crossfade */}
           <div
+            className="shared-staging-canvas"
             style={{
               position: 'relative',
               width: '100%',
@@ -305,20 +331,62 @@ export default function ShowroomSpotlightStage() {
               backgroundColor: '#000000'
             }}
           >
-            <img
-              src={angleImages[currentAngle].url}
-              alt={angleImages[currentAngle].label}
+            {/* Perspective Layer 1: AERO Exterior 3/4 Front Stance */}
+            <div
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                filter: spotlightMode === 'stealth' ? 'contrast(1.25) brightness(0.8)' : 'contrast(1.08) brightness(1.02)',
-                transition: 'filter 0.4s ease, transform 0.6s ease'
+                position: 'absolute',
+                inset: 0,
+                opacity: currentAngle === 'aero' ? 1 : 0,
+                transform: currentAngle === 'aero' ? 'scale(1)' : 'scale(1.025)',
+                transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
+                pointerEvents: currentAngle === 'aero' ? 'auto' : 'none',
+                zIndex: currentAngle === 'aero' ? 4 : (previousAngle === 'aero' ? 3 : 1)
               }}
-            />
+            >
+              <img
+                src={angleImages.aero.url}
+                alt={angleImages.aero.label}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: spotlightMode === 'stealth' ? 'contrast(1.25) brightness(0.8)' : 'contrast(1.08) brightness(1.02)',
+                  transition: 'filter 0.4s ease, transform 0.6s ease'
+                }}
+              />
+              {/* Floor reflection gradient overlay */}
+              <div className="showroom-floor-reflection" />
+            </div>
 
-            {/* Floor reflection gradient overlay */}
-            <div className="showroom-floor-reflection" />
+            {/* Perspective Layer 2: COCKPIT Scripted Sequence */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: currentAngle === 'cockpit' ? 1 : 0,
+                transform: currentAngle === 'cockpit' ? 'scale(1)' : 'scale(0.97)',
+                transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
+                pointerEvents: currentAngle === 'cockpit' ? 'auto' : 'none',
+                zIndex: currentAngle === 'cockpit' ? 4 : (previousAngle === 'cockpit' ? 3 : 1)
+              }}
+            >
+              {(currentAngle === 'cockpit' || previousAngle === 'cockpit') && <CockpitSequence />}
+            </div>
+
+            {/* Perspective Layer 3: STUDIO 3D Configurator */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: currentAngle === 'studio' ? 1 : 0,
+                transform: currentAngle === 'studio' ? 'scale(1)' : 'scale(1.02)',
+                transition: 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
+                pointerEvents: currentAngle === 'studio' ? 'auto' : 'none',
+                zIndex: currentAngle === 'studio' ? 4 : (previousAngle === 'studio' ? 3 : 1)
+              }}
+            >
+              {(currentAngle === 'studio' || previousAngle === 'studio') && <StudioConfigurator />}
+            </div>
 
             {/* Stage Mode & Perspective Badges */}
             <div
@@ -328,7 +396,8 @@ export default function ShowroomSpotlightStage() {
                 left: '24px',
                 display: 'flex',
                 gap: '12px',
-                zIndex: 5
+                zIndex: 10,
+                pointerEvents: 'none'
               }}
             >
               <div
@@ -358,7 +427,7 @@ export default function ShowroomSpotlightStage() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
-                  zIndex: 5,
+                  zIndex: 10,
                   minWidth: '220px',
                   transition: 'border-color 0.15s ease'
                 }}
@@ -456,14 +525,15 @@ export default function ShowroomSpotlightStage() {
               {Object.keys(angleImages).map((angleKey) => (
                 <button
                   key={angleKey}
-                  onClick={() => setCurrentAngle(angleKey)}
-                  className="btn-outlined"
+                  onClick={() => handleSelectAngle(angleKey)}
+                  className="btn-outlined spec-chip-tactile"
                   style={{
                     padding: '8px 14px',
                     fontSize: '11px',
                     borderColor: currentAngle === angleKey ? 'var(--color-pearl-white)' : 'var(--color-graphite-border)',
                     backgroundColor: currentAngle === angleKey ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: currentAngle === angleKey ? 'var(--color-pearl-white)' : 'var(--color-steel-mid)'
+                    color: currentAngle === angleKey ? 'var(--color-pearl-white)' : 'var(--color-steel-mid)',
+                    cursor: 'pointer'
                   }}
                 >
                   {angleKey.toUpperCase()}
@@ -484,13 +554,14 @@ export default function ShowroomSpotlightStage() {
                 <button
                   key={mode.key}
                   onClick={() => setSpotlightMode(mode.key)}
-                  className="btn-outlined"
+                  className="btn-outlined spec-chip-tactile"
                   style={{
                     padding: '8px 14px',
                     fontSize: '11px',
                     borderColor: spotlightMode === mode.key ? 'var(--color-pearl-white)' : 'var(--color-graphite-border)',
                     backgroundColor: spotlightMode === mode.key ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: spotlightMode === mode.key ? 'var(--color-pearl-white)' : 'var(--color-steel-mid)'
+                    color: spotlightMode === mode.key ? 'var(--color-pearl-white)' : 'var(--color-steel-mid)',
+                    cursor: 'pointer'
                   }}
                 >
                   {mode.label}
@@ -502,7 +573,7 @@ export default function ShowroomSpotlightStage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
                 onClick={handleToggleEngine}
-                className="btn-outlined"
+                className="btn-outlined spec-chip-tactile"
                 style={{
                   padding: '8px 18px',
                   fontSize: '12px',
@@ -510,7 +581,8 @@ export default function ShowroomSpotlightStage() {
                   alignItems: 'center',
                   gap: '8px',
                   borderColor: engineRunning ? 'var(--color-pearl-white)' : 'var(--color-steel-mid)',
-                  color: '#ffffff'
+                  color: '#ffffff',
+                  cursor: 'pointer'
                 }}
               >
                 {engineRunning ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
@@ -520,13 +592,14 @@ export default function ShowroomSpotlightStage() {
               {engineRunning && (
                 <button
                   onClick={handleRevThrottle}
-                  className="btn-outlined"
+                  className="btn-outlined spec-chip-tactile"
                   style={{
                     padding: '8px 18px',
                     fontSize: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.08)',
                     borderColor: 'var(--color-pearl-white)',
-                    color: 'var(--color-pearl-white)'
+                    color: 'var(--color-pearl-white)',
+                    cursor: 'pointer'
                   }}
                 >
                   <Activity size={14} />
