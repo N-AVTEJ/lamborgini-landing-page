@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
 import { fileURLToPath } from 'url';
 import { chromium } from 'playwright-core';
 
@@ -9,7 +10,28 @@ const recordingsDir = path.resolve(__dirname, '../recordings');
 
 fs.mkdirSync(recordingsDir, { recursive: true });
 
+async function getAvailablePort() {
+  const ports = [5173, 5174, 3000, 8080];
+  for (const port of ports) {
+    const isUp = await new Promise((resolve) => {
+      const req = http.get(`http://localhost:${port}/`, (res) => {
+        resolve(res.statusCode === 200 || res.statusCode === 304);
+      });
+      req.on('error', () => resolve(false));
+      req.setTimeout(800, () => {
+        req.destroy();
+        resolve(false);
+      });
+    });
+    if (isUp) return port;
+  }
+  return 5173; // fallback default
+}
+
 async function runRecording() {
+  const targetPort = await getAvailablePort();
+  console.log(`--- Detected active server on port ${targetPort} ---`);
+
   console.log('--- Launching Microsoft Edge via Playwright ---');
   const browser = await chromium.launch({
     executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -26,8 +48,8 @@ async function runRecording() {
   });
 
   const page = await context.newPage();
-  console.log('Navigating to Showroom at http://localhost:5174/ ...');
-  await page.goto('http://localhost:5174/', { waitUntil: 'networkidle' });
+  console.log(`Navigating to Showroom at http://localhost:${targetPort}/ ...`);
+  await page.goto(`http://localhost:${targetPort}/`, { waitUntil: 'networkidle' });
 
   // 1. Scroll to the flagship Showroom Spotlight Stage
   console.log('1. Scrolling into Showroom Spotlight Stage...');
@@ -39,7 +61,7 @@ async function runRecording() {
   await page.screenshot({ path: path.join(recordingsDir, '01-aero-stance.png') });
   await page.waitForTimeout(1500);
 
-  // Optional: Ignite Defender V8 engine to show RPM HUD
+  // Ignite Defender V8 engine to show RPM HUD
   const igniteBtn = page.getByRole('button', { name: /IGNITE DEFENDER V8/i });
   if (await igniteBtn.isVisible()) {
     await igniteBtn.click();
@@ -53,15 +75,15 @@ async function runRecording() {
   await cockpitBtn.click();
 
   // Watch the scripted sequence: Door opening -> Camera push-in -> Cluster boot -> Screen boot -> Ambient pulse
-  console.log('   - Door opening & camera pushing into interior POV...');
-  await page.waitForTimeout(800);
+  console.log('   - Driver door rotating open (3D transform, hinge-point perspective origin)...');
+  await page.waitForTimeout(700);
   await page.screenshot({ path: path.join(recordingsDir, '03-cockpit-door-open.png') });
 
-  console.log('   - Cluster backlight fading up & Pivi Pro booting...');
-  await page.waitForTimeout(1100);
+  console.log('   - Camera push-in & cluster backlight fading up...');
+  await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(recordingsDir, '04-cockpit-cluster-boot.png') });
 
-  console.log('   - Ambient light strip active & idling pulse...');
+  console.log('   - Pivi Pro screen online & ambient interior strip pulsing...');
   await page.waitForTimeout(1800);
   await page.screenshot({ path: path.join(recordingsDir, '05-cockpit-powered-up.png') });
 
@@ -108,17 +130,30 @@ async function runRecording() {
   await page.screenshot({ path: path.join(recordingsDir, '11-studio-custom-red.png') });
   await page.waitForTimeout(1000);
 
+  // 6. Test persistence across perspectives: Switch to AERO and back to STUDIO
+  console.log('6. Testing paint customization persistence: switching to AERO...');
+  const aeroBtn = page.getByRole('button', { name: 'AERO' });
+  await aeroBtn.click();
+  await page.waitForTimeout(800);
+
+  console.log('   Switching back to STUDIO (should retain custom paint)...');
+  await studioBtn.click();
+  await page.waitForTimeout(800);
+
   console.log('Closing page and finalizing continuous video capture...');
   await page.close();
   await context.close();
   await browser.close();
 
   const files = fs.readdirSync(recordingsDir);
-  const videoFile = files.find((f) => f.endsWith('.webm'));
+  const videoFile = files.find((f) => f.endsWith('.webm') && f !== 'defender-showroom-cinematic-upgrade.webm');
   console.log('--- Screen Capture Complete! ---');
   if (videoFile) {
     const videoPath = path.join(recordingsDir, videoFile);
     const finalVideoPath = path.join(recordingsDir, 'defender-showroom-cinematic-upgrade.webm');
+    if (fs.existsSync(finalVideoPath)) {
+      fs.unlinkSync(finalVideoPath);
+    }
     fs.renameSync(videoPath, finalVideoPath);
     console.log(`Video recorded: ${finalVideoPath} (${(fs.statSync(finalVideoPath).size / 1024).toFixed(1)} KB)`);
   }
