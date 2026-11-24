@@ -8,11 +8,12 @@ import EventBannerSection from '../components/EventBannerSection';
 
 describe('Defender Showroom Video Assets Integration Suite', () => {
   beforeEach(() => {
-    sessionStorage.clear();
+    vi.useRealTimers();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   describe('1. cockpit-door video asset integration', () => {
@@ -36,6 +37,21 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       expect(sources[1]).toHaveAttribute('type', 'video/mp4');
     });
 
+    it('initiates with cockpit-door visible and power-up cluster in STANDBY before door ends', () => {
+      const { container } = render(<CockpitSequence startStatic={false} />);
+      const doorVideo = container.querySelector('video.cockpit-door-video');
+      const interiorVideo = container.querySelector('video.cockpit-interior-video');
+
+      expect(doorVideo).toHaveStyle({ opacity: '1' });
+      expect(interiorVideo).toHaveStyle({ opacity: '0' });
+
+      // Before ended, cluster is in STANDBY, not READY · SPORT
+      expect(screen.getByText('STANDBY')).toBeInTheDocument();
+      expect(screen.queryByText('READY · SPORT')).not.toBeInTheDocument();
+      // Pivi Pro center screen is not yet online
+      expect(screen.queryByText(/DEFENDER 4X4i TERRAIN RESPONSE/i)).not.toBeInTheDocument();
+    });
+
     it('upgrades cockpit-door preload to "auto" on COCKPIT tab hover and focus in Showroom stage', () => {
       const { container } = render(<ShowroomSpotlightStage />);
       const cockpitTab = screen.getByRole('button', { name: /COCKPIT/i });
@@ -54,18 +70,63 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
     });
 
     it('triggers power-up sequence and interior view when cockpit-door video fires ended event', () => {
+      vi.useFakeTimers();
       const { container } = render(<CockpitSequence startStatic={false} />);
       const doorVideo = container.querySelector('video.cockpit-door-video');
+      const interiorVideo = container.querySelector('video.cockpit-interior-video');
       expect(doorVideo).toBeInTheDocument();
+
+      // Before ended event: cluster in standby
+      expect(screen.getByText('STANDBY')).toBeInTheDocument();
+      expect(screen.queryByText('READY · SPORT')).not.toBeInTheDocument();
 
       // Fire ended event on door video
       act(() => {
         fireEvent.ended(doorVideo);
       });
 
-      // Cluster boots up
+      // Interior video becomes visible and door fades
+      expect(doorVideo).toHaveStyle({ opacity: '0' });
+      expect(interiorVideo).toHaveStyle({ opacity: '1' });
+
+      // Cluster boots up immediately to READY · SPORT
       expect(screen.getByText('DEFENDER V8 CLUSTER')).toBeInTheDocument();
       expect(screen.getByText('READY · SPORT')).toBeInTheDocument();
+      expect(screen.getByText('PIVI PRO BOOTING...')).toBeInTheDocument();
+
+      // Step 2: After 600ms, Pivi Pro completes boot sequence
+      act(() => {
+        vi.advanceTimersByTime(650);
+      });
+      expect(screen.getByText(/DEFENDER 4X4i TERRAIN RESPONSE/i)).toBeInTheDocument();
+
+      // Step 3: After 1200ms total, phase becomes idle
+      act(() => {
+        vi.advanceTimersByTime(600);
+      });
+      expect(screen.getByText('COCKPIT SYSTEM ONLINE')).toBeInTheDocument();
+    });
+
+    it('resets and replays sequence when COCKPIT perspective becomes active', () => {
+      const { container, rerender } = render(<CockpitSequence isActive={false} startStatic={false} />);
+      const doorVideo = container.querySelector('video.cockpit-door-video');
+
+      // Play through door ended
+      act(() => {
+        fireEvent.ended(doorVideo);
+      });
+      expect(screen.getByText('READY · SPORT')).toBeInTheDocument();
+
+      // User navigates away
+      rerender(<CockpitSequence isActive={false} startStatic={false} />);
+
+      // User clicks COCKPIT tab again (isActive becomes true)
+      rerender(<CockpitSequence isActive={true} startStatic={false} />);
+
+      // Sequence resets to door-open
+      expect(doorVideo).toHaveStyle({ opacity: '1' });
+      expect(screen.getByText('STANDBY')).toBeInTheDocument();
+      expect(screen.queryByText('READY · SPORT')).not.toBeInTheDocument();
     });
   });
 
@@ -79,6 +140,7 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       expect(interiorVideo.muted).toBe(true);
       expect(interiorVideo.playsInline).toBe(true);
       expect(interiorVideo.loop).toBe(false);
+      expect(interiorVideo).toHaveAttribute('preload', 'auto');
 
       const sources = interiorVideo.querySelectorAll('source');
       expect(sources.length).toBe(2);
@@ -96,7 +158,7 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
         fireEvent.ended(interiorVideo);
       });
 
-      // Video remains in DOM and does not reset
+      // Video remains in DOM, paused on last frame and does not reset to black
       expect(interiorVideo).toBeInTheDocument();
       expect(container.querySelector('.cockpit-sequence-container')).toBeInTheDocument();
     });
@@ -154,6 +216,7 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       expect(bannerVideo).toBeInTheDocument();
 
       expect(bannerVideo).toHaveAttribute('poster', '/videos/desert-expedition-poster.jpg');
+      expect(bannerVideo).toHaveAttribute('preload', 'metadata');
       expect(bannerVideo.muted).toBe(true);
       expect(bannerVideo.loop).toBe(true);
       expect(bannerVideo.playsInline).toBe(true);
@@ -176,6 +239,16 @@ describe('Defender Showroom Video Assets Integration Suite', () => {
       const posterImg = container.querySelector('img.cockpit-interior-poster');
       expect(posterImg).toBeInTheDocument();
       expect(posterImg).toHaveAttribute('src', '/videos/cockpit-interior-poster.jpg');
+    });
+
+    it('mounts cockpit-door poster <img> when reduced motion is preferred before interior view', () => {
+      const { container } = render(<CockpitSequence forceReducedMotion={true} startStatic={false} />);
+      const videos = container.querySelectorAll('video');
+      expect(videos.length).toBe(0);
+
+      const posterImg = container.querySelector('img.cockpit-door-poster');
+      expect(posterImg).toBeInTheDocument();
+      expect(posterImg).toHaveAttribute('src', '/videos/cockpit-door-poster.jpg');
     });
 
     it('mounts poster <img> and ZERO <video> elements in DOM for Studio turntable when reduced motion is preferred', () => {
