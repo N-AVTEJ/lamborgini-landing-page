@@ -83,6 +83,7 @@ export default function EventBannerSection({ forceMount = false, forceReducedMot
             muted
             loop
             playsInline
+            preload="metadata"
             poster="/videos/desert-expedition-poster.jpg"
             style={{
               position: 'absolute',
