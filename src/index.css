@@ -274,12 +274,20 @@ img, video {
   padding: 16px 24px;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .btn-giallo:hover {
   background-color: var(--color-giallo-ombra);
   color: var(--color-pearl-white);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 24px rgba(255, 192, 0, 0.28) !important;
+}
+
+.btn-giallo:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 4px 10px rgba(255, 192, 0, 0.15) !important;
 }
 
 /* Ghost Link Button */
@@ -296,6 +304,7 @@ img, video {
   padding: 8px 0;
   cursor: pointer;
   position: relative;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .btn-ghost::after {
@@ -309,8 +318,16 @@ img, video {
   transition: width 0.25s ease;
 }
 
+.btn-ghost:hover {
+  transform: translateX(4px);
+}
+
 .btn-ghost:hover::after {
   width: 100%;
+}
+
+.btn-ghost:active {
+  transform: translateX(2px) scale(0.99);
 }
 
 /* Outlined Nav Button */
@@ -327,18 +344,27 @@ img, video {
   text-transform: uppercase;
   padding: 12px 20px;
   cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
 }
 
 .btn-outlined:hover {
   border-color: var(--color-pearl-white);
   background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45) !important;
+}
+
+.btn-outlined:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .surface-canvas .btn-outlined:hover,
 .surface-marble .btn-outlined:hover {
   border-color: var(--color-pure-black);
   background-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* Three-Column Story Grid */
@@ -367,35 +393,61 @@ img, video {
   padding-bottom: var(--spacing-80);
 }
 
-/* Conical spotlight light beam */
+/* Conical spotlight light beam — softened multi-layered volumetric lighting */
 .showroom-spotlight-beam {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 60%;
-  height: 85%;
+  width: 54%;
+  height: 86%;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.12) 35%, rgba(0, 0, 0, 0) 75%);
-  clip-path: polygon(30% 0%, 70% 0%, 95% 100%, 5% 100%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(0, 0, 0, 0) 80%);
+  clip-path: polygon(26% 0%, 74% 0%, 96% 100%, 4% 100%);
   z-index: 2;
-  transition: opacity 0.5s ease, background 0.5s ease;
+  filter: blur(4px);
+  transition: opacity 0.6s ease, background 0.6s ease;
 }
 
 .showroom-spotlight-beam.theater,
 .showroom-spotlight-beam.dramatic {
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.18) 35%, rgba(0, 0, 0, 0) 75%);
-  opacity: 1;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.12) 42%, rgba(0, 0, 0, 0) 80%);
+  opacity: 0.9;
 }
 
 .showroom-spotlight-beam.ambient {
-  background: radial-gradient(circle at 50% 30%, rgba(255, 192, 0, 0.18) 0%, rgba(255, 255, 255, 0.08) 40%, rgba(0, 0, 0, 0) 80%);
+  background: radial-gradient(circle at 50% 30%, rgba(255, 192, 0, 0.14) 0%, rgba(255, 255, 255, 0.06) 45%, rgba(0, 0, 0, 0) 85%);
   clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
 .showroom-spotlight-beam.stealth {
-  opacity: 0.12;
+  opacity: 0.1;
+  filter: blur(8px);
+}
+
+/* Atmospheric Ambient Fog & Dust particulate wash across stage */
+.showroom-stage-haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.035) 0%, rgba(0, 0, 0, 0.45) 65%, rgba(0, 0, 0, 0.95) 100%);
+  z-index: 1;
+}
+
+/* Floor Specular Light Pool (soft secondary layer beneath vehicle) */
+.showroom-floor-pool {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  width: 70%;
+  height: 25%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12) 0%, rgba(255, 192, 0, 0.04) 35%, transparent 75%);
+  filter: blur(16px);
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
 }
 
 /* Floor reflection overlay */
@@ -479,16 +531,25 @@ img, video {
   z-index: 4;
 }
 
-/* Telemetry Card Scanline Accent */
+/* Telemetry Card Scanline Accent & Tactile Interaction */
 .telemetry-card {
   position: relative;
   border: 1px solid var(--color-graphite-border);
-  transition: border-color 0.25s ease, background-color 0.25s ease;
+  transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .telemetry-card:hover {
   border-color: var(--color-pearl-white);
   background-color: #222222;
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55) !important;
+  z-index: 2;
+}
+
+.telemetry-card:active {
+  transform: translateY(-1px) scale(0.995);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4) !important;
 }
 
 .telemetry-hairline-accent {
@@ -505,11 +566,12 @@ img, video {
   background-color: var(--color-giallo-vivo);
 }
 
-/* Vehicle Tile Interactive Hover Lighting */
+/* Vehicle Tile Interactive Hover Lighting & Tactile Depth */
 .vehicle-tile-interactive {
   position: relative;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid transparent;
+  will-change: transform;
 }
 
 .vehicle-tile-interactive::before {
@@ -530,6 +592,13 @@ img, video {
 
 .vehicle-tile-interactive:hover {
   border-color: var(--color-graphite-border);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.12) !important;
+}
+
+.vehicle-tile-interactive:active {
+  transform: translateY(-1px) scale(0.995);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
 }
 
 .vehicle-tile-img-wrap {
@@ -559,6 +628,36 @@ img, video {
 
 .vehicle-tile-interactive:hover .vehicle-specular-sheen {
   opacity: 1;
+}
+
+/* Spec Chips & Perspective Badges Tactile Feedback */
+.spec-chip-tactile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  will-change: transform;
+}
+
+.spec-chip-tactile:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+.spec-chip-tactile:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Reduced motion preference global contract */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
 }
 
 /* Monolithic Typography Entrance Reveals */
