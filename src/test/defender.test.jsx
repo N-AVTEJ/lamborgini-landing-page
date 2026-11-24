@@ -203,6 +203,7 @@ describe('Showroom Spotlight Stage — "Showroom black with one yellow car under
     expect(screen.getByText('635 PS')).toBeInTheDocument();
     expect(screen.getByText('3.8 SEC')).toBeInTheDocument();
     expect(screen.getByText('250 KM/H')).toBeInTheDocument();
+    expect(screen.getByText('1,000 MM')).toBeInTheDocument();
     expect(screen.getByText('7,200 RPM')).toBeInTheDocument();
   });
 
@@ -260,6 +261,47 @@ describe('Showroom Spotlight Stage — "Showroom black with one yellow car under
 
     const stopBtn = screen.getByRole('button', { name: /SHUTDOWN DEFENDER V8 \(STOP\)/i });
     fireEvent.click(stopBtn);
+  });
+
+  it('renders authentic audio HUD telemetry and active sport exhaust when engine is ignited', () => {
+    render(<ShowroomSpotlightStage />);
+    const startBtn = screen.getByRole('button', { name: /IGNITE DEFENDER V8 \(START\)/i });
+    fireEvent.click(startBtn);
+
+    expect(screen.getByText('4.4L TWIN-TURBO V8 TELEMETRY')).toBeInTheDocument();
+    expect(screen.getByText(/ACTIVE SPORT EXHAUST: QUAD VALVES UNLEASHED/i)).toBeInTheDocument();
+    expect(screen.getByText(/PEAK:/i)).toBeInTheDocument();
+
+    const stopBtn = screen.getByRole('button', { name: /SHUTDOWN DEFENDER V8 \(STOP\)/i });
+    fireEvent.click(stopBtn);
+  });
+
+  it('updates dynamic spotlight beam follow coordinates on stage mouse move', () => {
+    const { container } = render(<ShowroomSpotlightStage />);
+    const section = container.querySelector('#showroom-spotlight');
+    const beam = container.querySelector('.showroom-spotlight-beam');
+
+    expect(section).toBeInTheDocument();
+    expect(beam).toBeInTheDocument();
+
+    fireEvent.mouseMove(section, { clientX: 700 });
+    expect(beam).toBeInTheDocument();
+  });
+});
+
+describe('Authentic Land Rover Defender Audio Assets', () => {
+  it('contains valid recorded WAV audio assets with RIFF headers in public/audio/', () => {
+    const audioDir = path.resolve(__dirname, '../../public/audio');
+    const files = ['defender-v8-start.wav', 'defender-v8-rev.wav', 'defender-v8-idle.wav'];
+
+    for (const file of files) {
+      const fullPath = path.join(audioDir, file);
+      expect(fs.existsSync(fullPath)).toBe(true);
+      const buffer = fs.readFileSync(fullPath);
+      expect(buffer.toString('ascii', 0, 4)).toBe('RIFF');
+      expect(buffer.toString('ascii', 8, 12)).toBe('WAVE');
+      expect(buffer.length).toBeGreaterThan(100000); // substantial authentic sound recording
+    }
   });
 });
 
