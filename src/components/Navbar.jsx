@@ -309,7 +309,7 @@ export default function Navbar() {
                   border: '1px solid var(--color-graphite-border)',
                   color: '#ffffff',
                   fontSize: '18px',
-                  fontFamily: 'var(--font-lambotype)',
+                  fontFamily: 'var(--font-defendertype, var(--font-lambotype))',
                   letterSpacing: '0.0230em',
                   textTransform: 'uppercase',
                   padding: '16px 20px',
