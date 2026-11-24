@@ -71,17 +71,7 @@ function Defender3DModel({ targetColorHex }) {
 function StudioStageFloor() {
   return (
     <group position={[0, -0.01, 0]}>
-      {/* Dark Studio Floor Disc */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[7, 64]} />
-        <meshStandardMaterial
-          color="#121212"
-          roughness={0.8}
-          metalness={0.2}
-        />
-      </mesh>
-
-      {/* Soft Contact Shadow beneath vehicle wheels */}
+      {/* Soft Contact Shadow beneath vehicle wheels (transparent so background video turntable shows through) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
         <planeGeometry args={[5.2, 3.2]} />
         <meshBasicMaterial
@@ -257,7 +247,7 @@ export default function StudioConfigurator({
                 maxDistance={7.5}
                 minPolarAngle={Math.PI / 6}
                 maxPolarAngle={Math.PI / 2.05}
-                autoRotate={autoRotate}
+                autoRotate={prefersReducedMotion ? false : autoRotate}
                 autoRotateSpeed={0.8}
               />
             </Canvas>
