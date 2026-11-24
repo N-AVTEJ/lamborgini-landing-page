@@ -56,6 +56,7 @@ describe('Defender Design Tokens & CSS Specification', () => {
 
   it('configures typography with Barlow Condensed substitute and 0.0230em letter-spacing', () => {
     expect(css).toContain('--font-lambotype');
+    expect(css).toContain('--font-defendertype');
     expect(css).toContain('Barlow Condensed');
     expect(css).toContain('letter-spacing: 0.0230em');
     expect(css).toContain('text-transform: uppercase');
@@ -129,6 +130,10 @@ describe('Top Navigation Bar Component', () => {
 
     fireEvent.change(searchInput, { target: { value: 'OCTA' } });
     expect(screen.getByText('4.4L TWIN-TURBO V8 MHEV — 635 PS / 250 KM/H')).toBeInTheDocument();
+
+    // Escape closes search modal
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByPlaceholderText(/TYPE MODEL NAME/i)).not.toBeInTheDocument();
   });
 });
 
@@ -167,17 +172,25 @@ describe('Model Lineup Section Component', () => {
     expect(screen.getByText(/DISCOVER ALL MODELS/i)).toBeInTheDocument();
   });
 
-  it('filters models dynamically based on category toolbar', () => {
+  it('filters models dynamically based on category toolbar across all 5 Defender model lines', () => {
     render(<ModelLineupSection />);
     expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER OCTA' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER 110' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER 90' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER 130 OUTBOUND' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER WORKS TROPHY' })).toBeInTheDocument();
 
     const def90Btn = screen.getByRole('button', { name: 'DEFENDER 90' });
     fireEvent.click(def90Btn);
 
     expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER 90' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 3, name: 'DEFENDER OCTA' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'DEFENDER 130 OUTBOUND' })).not.toBeInTheDocument();
+
+    const def130Btn = screen.getByRole('button', { name: 'DEFENDER 130' });
+    fireEvent.click(def130Btn);
+    expect(screen.getByRole('heading', { level: 3, name: 'DEFENDER 130 OUTBOUND' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'DEFENDER 90' })).not.toBeInTheDocument();
   });
 });
 
@@ -201,13 +214,21 @@ describe('Showroom Spotlight Stage — "Showroom black with one yellow car under
     expect(screen.getByText('MAGNESIUM BEAM & PIVI PRO')).toBeInTheDocument();
   });
 
-  it('allows switching spotlight lighting modes', () => {
+  it('allows switching spotlight lighting modes between theatrical beam, ambient glow, and stealth', () => {
     const { container } = render(<ShowroomSpotlightStage />);
     const stealthBtn = screen.getByRole('button', { name: /STEALTH CONTRAST/i });
     fireEvent.click(stealthBtn);
 
     const beam = container.querySelector('.showroom-spotlight-beam');
     expect(beam).toHaveClass('stealth');
+
+    const ambientBtn = screen.getByRole('button', { name: /AMBIENT GLOW/i });
+    fireEvent.click(ambientBtn);
+    expect(beam).toHaveClass('ambient');
+
+    const theaterBtn = screen.getByRole('button', { name: /THEATRICAL BEAM/i });
+    fireEvent.click(theaterBtn);
+    expect(beam).toHaveClass('theater');
   });
 
   it('interacts with the V8 Web Audio Engine ignition and rev controls', () => {
@@ -222,6 +243,23 @@ describe('Showroom Spotlight Stage — "Showroom black with one yellow car under
     const stopBtn = screen.getByRole('button', { name: /SHUTDOWN DEFENDER V8 \(STOP\)/i });
     fireEvent.click(stopBtn);
     expect(screen.getByRole('button', { name: /IGNITE DEFENDER V8 \(START\)/i })).toBeInTheDocument();
+  });
+
+  it('safely handles rapid repeated throttle rev calls without race conditions', () => {
+    render(<ShowroomSpotlightStage />);
+    const startBtn = screen.getByRole('button', { name: /IGNITE DEFENDER V8 \(START\)/i });
+    fireEvent.click(startBtn);
+
+    const revBtn = screen.getByText(/REV TO 7,200 RPM/i);
+    // Rapid multiple clicks
+    expect(() => {
+      fireEvent.click(revBtn);
+      fireEvent.click(revBtn);
+      fireEvent.click(revBtn);
+    }).not.toThrow();
+
+    const stopBtn = screen.getByRole('button', { name: /SHUTDOWN DEFENDER V8 \(STOP\)/i });
+    fireEvent.click(stopBtn);
   });
 });
 
