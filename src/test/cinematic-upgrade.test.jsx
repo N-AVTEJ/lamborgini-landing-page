@@ -70,7 +70,7 @@ describe('Problem 2: Cockpit Scripted Sequence Component', () => {
   });
 });
 
-describe('Problem 3: Studio 3D Configurator Component', () => {
+describe('Problem 3: Studio 2D Configurator Component', () => {
   it('renders all 5 mandatory Land Rover paint swatches plus custom hex picker', () => {
     render(<StudioConfigurator />);
 
@@ -112,13 +112,12 @@ describe('Problem 3: Studio 3D Configurator Component', () => {
     expect(screen.getByText('BESPOKE SVO COLOR')).toBeInTheDocument();
   });
 
-  it('provides auto-orbit toggle and navigation controls', () => {
-    render(<StudioConfigurator />);
-    expect(screen.getByText(/DRAG TO ORBIT · PINCH\/SCROLL TO ZOOM/i)).toBeInTheDocument();
-
-    const orbitBtn = screen.getByRole('button', { name: /auto orbit/i });
-    expect(orbitBtn).toBeInTheDocument();
-    fireEvent.click(orbitBtn);
+  it('renders centered 2D studio photography asset with Solihull studio specification', () => {
+    const { container } = render(<StudioConfigurator />);
+    const photo = container.querySelector('img.studio-vehicle-photo');
+    expect(photo).toBeInTheDocument();
+    expect(photo).toHaveAttribute('src', '/images/defender-90-studio.jpg');
+    expect(screen.getByText(/SOLIHULL STUDIO SPECIFICATION · 2D BESPOKE COLOR CONFIGURATOR/i)).toBeInTheDocument();
   });
 });
 

@@ -400,7 +400,7 @@ export default function ShowroomSpotlightStage() {
               />
             </div>
 
-            {/* Perspective Layer 3: STUDIO 3D Configurator */}
+            {/* Perspective Layer 3: STUDIO 2D Configurator */}
             <div
               style={{
                 position: 'absolute',

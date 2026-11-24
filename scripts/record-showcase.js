@@ -75,26 +75,27 @@ async function runRecording() {
   await cockpitBtn.click();
 
   // Watch the scripted sequence: Door opening -> Camera push-in -> Cluster boot -> Screen boot -> Ambient pulse
-  console.log('   - Driver door rotating open (3D transform, hinge-point perspective origin)...');
-  await page.waitForTimeout(700);
+  console.log('   - Driver door video playing (cockpit-door video firing)...');
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(recordingsDir, '03-cockpit-door-open.png') });
 
-  console.log('   - Camera push-in & cluster backlight fading up...');
-  await page.waitForTimeout(1000);
+  console.log('   - Door sequence ending, transitioning to interior view & cluster booting...');
+  await page.waitForTimeout(2800); // 1.5s + 2.8s = 4.3s (> 3.9s door video duration)
   await page.screenshot({ path: path.join(recordingsDir, '04-cockpit-cluster-boot.png') });
 
   console.log('   - Pivi Pro screen online & ambient interior strip pulsing...');
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(recordingsDir, '05-cockpit-powered-up.png') });
 
-  // 4. Switch to STUDIO 3D perspective
-  console.log('4. Switching to STUDIO 3D Configurator perspective...');
+  // 4. Switch to STUDIO 2D Configurator perspective
+  console.log('4. Switching to STUDIO 2D Configurator perspective...');
   const studioBtn = page.getByRole('button', { name: 'STUDIO' });
   await studioBtn.click();
   await page.waitForTimeout(1500);
-  await page.screenshot({ path: path.join(recordingsDir, '06-studio-3d-giallo.png') });
+  await page.screenshot({ path: path.join(recordingsDir, '06-studio-2d-giallo.png') });
+  await page.screenshot({ path: path.join(recordingsDir, '06-studio-3d-giallo.png') }); // preserve legacy filename if needed
 
-  // 5. Change colors live to verify ~400ms paint shader lerp
+  // 5. Change colors live to verify ~400ms paint overlay crossfade on flat image
   console.log('5. Selecting PANGEA GREEN swatch...');
   const pangeaBtn = page.getByRole('button', { name: /Select PANGEA GREEN/i });
   await pangeaBtn.click();

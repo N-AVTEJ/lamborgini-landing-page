@@ -1,19 +1,21 @@
-import React, { useState, useRef, useMemo, useEffect, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
-import { Palette, Check, RefreshCw, Sliders, Maximize2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Palette, Check, Sliders, Sparkles } from 'lucide-react';
 import { useReducedMotion } from '../utils/useReducedMotion';
 
-function safePlay(video) {
+function safePlay(video, name = 'turntableVideo') {
   if (!video || typeof video.play !== 'function') return;
   try {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
     const p = video.play();
     if (p && typeof p.catch === 'function') {
-      p.catch(() => {});
+      p.catch((err) => {
+        console.error(`[safePlay] ${name}.play() blocked or rejected:`, err.name, err.message);
+      });
     }
-  } catch {
-    // ignore play errors
+  } catch (err) {
+    console.error(`[safePlay] ${name}.play() threw synchronously:`, err);
   }
 }
 
@@ -24,89 +26,6 @@ const DEFENDER_PALETTE = [
   { id: 'carpathian-grey', name: 'CARPATHIAN GREY', hex: '#35393c', badge: 'PREMIUM SATIN GRAPHITE' },
   { id: 'fuji-white', name: 'FUJI WHITE', hex: '#f0f2f3', badge: 'HIGH-CONTRAST ARCTIC SPEC' }
 ];
-
-// 3D Model Renderer with real-time body paint lerp (~400ms transition)
-function Defender3DModel({ targetColorHex }) {
-  const { scene } = useGLTF('/models/defender.glb');
-  const targetColor = useMemo(() => new THREE.Color(targetColorHex), [targetColorHex]);
-
-  // Clone scene so different instances don't cross-contaminate materials
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone(true);
-    clone.traverse((child) => {
-      if (child.isMesh && child.material) {
-        if (Array.isArray(child.material)) {
-          child.material = child.material.map((m) => m.clone());
-        } else {
-          child.material = child.material.clone();
-        }
-      }
-    });
-    return clone;
-  }, [scene]);
-
-  // Find all body painted meshes
-  const bodyMaterials = useMemo(() => {
-    const mats = [];
-    clonedScene.traverse((child) => {
-      if (child.isMesh && child.material) {
-        const list = Array.isArray(child.material) ? child.material : [child.material];
-        for (const mat of list) {
-          if (mat.name === 'Defender_Body') {
-            mats.push(mat);
-          }
-        }
-      }
-    });
-    return mats;
-  }, [clonedScene]);
-
-  // Lerp material color smoothly toward targetColor with ~400ms half-life
-  useFrame((_, delta) => {
-    // 7.5 rate achieves ~95% transition in 400ms
-    const step = Math.min(1, delta * 7.5);
-    for (const mat of bodyMaterials) {
-      mat.color.lerp(targetColor, step);
-    }
-  });
-
-  return (
-    <primitive
-      object={clonedScene}
-      position={[0, 0, 0]}
-      rotation={[0, -Math.PI / 4, 0]}
-    />
-  );
-}
-
-// Studio Ground Floor with Neutral Soft Contact Shadow
-function StudioStageFloor() {
-  return (
-    <group position={[0, -0.01, 0]}>
-      {/* Soft Contact Shadow beneath vehicle wheels (transparent so background video turntable shows through) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
-        <planeGeometry args={[5.2, 3.2]} />
-        <meshBasicMaterial
-          color="#000000"
-          transparent
-          opacity={0.65}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-// Check if running in browser with functional WebGL support
-function canUseWebGL() {
-  if (typeof window === 'undefined') return false;
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') return false;
-  try {
-    const canvas = document.createElement('canvas');
-    return Boolean(window.WebGLRenderingContext && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
-  } catch {
-    return false;
-  }
-}
 
 export default function StudioConfigurator({
   initialColor = '#ffc000',
@@ -119,7 +38,6 @@ export default function StudioConfigurator({
 }) {
   const [internalColor, setInternalColor] = useState(initialColor);
   const [internalPresetId, setInternalPresetId] = useState('giallo-vivo');
-  const [autoRotate, setAutoRotate] = useState(true);
   const colorInputRef = useRef(null);
   const turntableVideoRef = useRef(null);
 
@@ -128,13 +46,12 @@ export default function StudioConfigurator({
 
   const systemReducedMotion = useReducedMotion();
   const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
-  const hasWebGL = useMemo(() => canUseWebGL(), []);
 
-  // Pause background video when tab is inactive to preserve CPU, GPU & battery
+  // Pause background turntable video when tab is inactive to preserve CPU, GPU & battery
   useEffect(() => {
     if (!turntableVideoRef.current) return;
     if (isActive) {
-      safePlay(turntableVideoRef.current);
+      safePlay(turntableVideoRef.current, 'turntableVideo');
     } else {
       try {
         turntableVideoRef.current.pause();
@@ -163,10 +80,6 @@ export default function StudioConfigurator({
     }
   };
 
-  const handleResetCamera = () => {
-    setAutoRotate(true);
-  };
-
   const currentSwatchInfo = DEFENDER_PALETTE.find((s) => s.id === selectedPresetId) || {
     id: 'custom',
     name: 'BESPOKE SVO COLOR',
@@ -188,9 +101,20 @@ export default function StudioConfigurator({
         touchAction: 'none'
       }}
     >
-      {/* 3D Canvas / Video Viewport */}
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '380px', touchAction: 'none' }}>
-        {/* studio-turntable: STUDIO tab background/base layer */}
+      {/* 2D Studio Photography Canvas on Turntable Video */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          flex: 1,
+          minHeight: '380px',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        {/* Layer 1: studio-turntable background loop */}
         <div
           className="studio-turntable-base-layer"
           style={{
@@ -213,7 +137,14 @@ export default function StudioConfigurator({
             />
           ) : (
             <video
-              ref={turntableVideoRef}
+              ref={(el) => {
+                turntableVideoRef.current = el;
+                if (el) {
+                  el.muted = true;
+                  el.defaultMuted = true;
+                  el.playsInline = true;
+                }
+              }}
               className="studio-turntable-video"
               autoPlay={isActive}
               muted
@@ -232,7 +163,7 @@ export default function StudioConfigurator({
             </video>
           )}
 
-          {/* Color-swatch configurator sits as an overlay on top (tint/filter overlay, the base video itself never changes color) */}
+          {/* Color-swatch tint overlay on turntable background for ambient lighting reflection */}
           <div
             className="studio-swatch-tint-overlay"
             style={{
@@ -242,46 +173,86 @@ export default function StudioConfigurator({
               mixBlendMode: 'color',
               opacity: 0.38,
               pointerEvents: 'none',
-              transition: 'background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+              transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease'
             }}
           />
         </div>
 
-        {/* Real 3D Material Swap path if WebGL is supported */}
-        {hasWebGL && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-            <Canvas
-              shadows
-              gl={{ alpha: true }}
-              camera={{ position: [3.8, 1.6, 3.8], fov: 42 }}
-              style={{ width: '100%', height: '100%', background: 'transparent' }}
-              onPointerDown={() => setAutoRotate(false)}
-            >
-              {/* Neutral Studio HDRI / Photo Studio Lighting Rig */}
-              <ambientLight intensity={0.7} color="#ffffff" />
-              <directionalLight position={[0, 7, 0]} intensity={1.4} color="#ffffff" />
-              <directionalLight position={[4, 3.5, 3]} intensity={1.6} color="#ffffff" />
-              <directionalLight position={[-4, 2.5, -2]} intensity={0.9} color="#e5effa" />
-              <directionalLight position={[-2, 3, 4]} intensity={1.1} color="#ffffff" />
+        {/* Layer 2: ORIGINAL 2D Studio Photography Asset Centered on Turntable */}
+        <div
+          className="studio-vehicle-stage"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+            pointerEvents: 'none'
+          }}
+        >
+          <div
+            className="studio-2d-vehicle-wrapper"
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '1020px',
+              height: '100%',
+              maxHeight: '580px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden'
+            }}
+          >
+            {/* High-res 2D Studio Defender Photograph */}
+            <img
+              src="/images/defender-90-studio.jpg"
+              alt="Defender Solihull Studio 2D Spec"
+              className="studio-vehicle-photo"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                filter: 'contrast(1.05) brightness(1.02)'
+              }}
+            />
 
-              <Suspense fallback={null}>
-                <Defender3DModel targetColorHex={currentColor} />
-                <StudioStageFloor />
-              </Suspense>
+            {/* Body Panel Color Overlay with smooth ~400ms transition */}
+            <div
+              className="studio-vehicle-body-tint"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: currentColor,
+                mixBlendMode: 'color',
+                opacity: selectedPresetId === 'carpathian-grey' ? 0.22 : 0.44,
+                pointerEvents: 'none',
+                transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
+                maskImage: 'radial-gradient(ellipse 68% 46% at 50% 50%, black 50%, transparent 92%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 68% 46% at 50% 50%, black 50%, transparent 92%)'
+              }}
+            />
 
-              {/* OrbitControls: Drag rotate, Scroll zoom, Clamped vertical angle */}
-              <OrbitControls
-                enablePan={false}
-                minDistance={2.8}
-                maxDistance={7.5}
-                minPolarAngle={Math.PI / 6}
-                maxPolarAngle={Math.PI / 2.05}
-                autoRotate={prefersReducedMotion || !isActive ? false : autoRotate}
-                autoRotateSpeed={0.8}
-              />
-            </Canvas>
+            {/* Specular highlights & reflections layer for metallic/satin paint depth */}
+            <div
+              className="studio-vehicle-specular-accent"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: currentColor,
+                mixBlendMode: 'soft-light',
+                opacity: selectedPresetId === 'fuji-white' ? 0.52 : 0.36,
+                pointerEvents: 'none',
+                transition: 'background-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease',
+                maskImage: 'radial-gradient(ellipse 60% 40% at 50% 48%, black 45%, transparent 88%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 60% 40% at 50% 48%, black 45%, transparent 88%)'
+              }}
+            />
           </div>
-        )}
+        </div>
 
         {/* Studio Top Control & HUD Badges */}
         <div
@@ -314,7 +285,8 @@ export default function StudioConfigurator({
                 width: '10px',
                 height: '10px',
                 backgroundColor: currentColor,
-                border: '1px solid rgba(255, 255, 255, 0.4)'
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                transition: 'background-color 400ms ease'
               }}
             />
             <span>{currentSwatchInfo.name}</span>
@@ -324,7 +296,7 @@ export default function StudioConfigurator({
           </div>
         </div>
 
-        {/* Orbit Hint & Reset Control */}
+        {/* 2D Studio Photography Badge */}
         <div
           style={{
             position: 'absolute',
@@ -333,14 +305,15 @@ export default function StudioConfigurator({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            zIndex: 15
+            zIndex: 15,
+            pointerEvents: 'none'
           }}
         >
           <div
             style={{
               backgroundColor: 'rgba(0, 0, 0, 0.75)',
               border: '1px solid var(--color-graphite-border)',
-              padding: '6px 10px',
+              padding: '6px 12px',
               fontSize: '10px',
               color: 'var(--color-steel-mid)',
               letterSpacing: '0.03em',
@@ -349,26 +322,9 @@ export default function StudioConfigurator({
               gap: '6px'
             }}
           >
-            <Maximize2 size={11} />
-            <span>DRAG TO ORBIT · PINCH/SCROLL TO ZOOM</span>
+            <Sparkles size={11} color="var(--color-giallo-vivo)" />
+            <span>SOLIHULL STUDIO SPECIFICATION · 2D BESPOKE COLOR CONFIGURATOR</span>
           </div>
-
-          <button
-            onClick={handleResetCamera}
-            className="btn-outlined spec-chip-tactile"
-            title="Reset Auto-Orbit"
-            style={{
-              padding: '6px 10px',
-              fontSize: '10px',
-              backgroundColor: 'rgba(0, 0, 0, 0.85)',
-              borderColor: 'var(--color-graphite-border)',
-              color: 'var(--color-pearl-white)',
-              cursor: 'pointer'
-            }}
-          >
-            <RefreshCw size={11} color="var(--color-giallo-vivo)" />
-            <span>AUTO ORBIT</span>
-          </button>
         </div>
       </div>
 

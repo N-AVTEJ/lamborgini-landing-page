@@ -1,16 +1,33 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, CheckCircle, ShieldCheck, Compass, Zap } from 'lucide-react';
-import { useReducedMotion } from '../utils/useReducedMotion';
 
-function safePlay(video) {
-  if (!video || typeof video.play !== 'function') return;
+function safePlay(video, name = 'video') {
+  if (!video || typeof video.play !== 'function') {
+    console.warn(`[safePlay] ${name} is not a valid video element:`, video);
+    return;
+  }
+  // Enforce DOM properties required by browser autoplay policies
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+
   try {
-    const p = video.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(() => {});
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch((err) => {
+        console.error(`[safePlay] ${name}.play() promise rejected:`, err.name, err.message);
+        // If rejected by autoplay policy, ensure muted property and retry
+        if (err.name === 'NotAllowedError') {
+          video.muted = true;
+          video.defaultMuted = true;
+          video.play().catch((retryErr) => {
+            console.error(`[safePlay] ${name}.play() retry failed:`, retryErr);
+          });
+        }
+      });
     }
-  } catch {
-    // ignore play errors in autoplay-restricted environments
+  } catch (err) {
+    console.error(`[safePlay] ${name}.play() threw synchronously:`, err);
   }
 }
 
@@ -22,8 +39,7 @@ export default function CockpitSequence({
   replayTrigger = 0
 }) {
   const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
-  const systemReducedMotion = useReducedMotion();
-  const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
+  const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : false;
   const startStatic = propStartStatic !== undefined ? propStartStatic : (isTest || prefersReducedMotion);
 
   // States: 'door-open' -> 'cluster-boot' -> 'screen-boot' -> 'ambient-strip' -> 'idle'
@@ -103,18 +119,28 @@ export default function CockpitSequence({
     setAmbientLit(false);
 
     if (doorVideoRef.current) {
-      try {
-        doorVideoRef.current.currentTime = 0;
-      } catch {
-        // ignore seek errors
+      doorVideoRef.current.muted = true;
+      doorVideoRef.current.defaultMuted = true;
+      doorVideoRef.current.playsInline = true;
+      if (doorVideoRef.current.currentTime > 0) {
+        try {
+          doorVideoRef.current.currentTime = 0;
+        } catch (e) {
+          console.warn('[CockpitSequence] Failed to reset currentTime:', e);
+        }
       }
-      safePlay(doorVideoRef.current);
+      safePlay(doorVideoRef.current, 'cockpit-door');
     }
     if (interiorVideoRef.current) {
-      try {
-        interiorVideoRef.current.currentTime = 0;
-      } catch {
-        // ignore seek errors
+      interiorVideoRef.current.muted = true;
+      interiorVideoRef.current.defaultMuted = true;
+      interiorVideoRef.current.playsInline = true;
+      if (interiorVideoRef.current.currentTime > 0) {
+        try {
+          interiorVideoRef.current.currentTime = 0;
+        } catch {
+          // ignore seek errors
+        }
       }
       try {
         interiorVideoRef.current.pause();
@@ -233,15 +259,26 @@ export default function CockpitSequence({
         <>
           {/* 1. cockpit-door: plays once on COCKPIT tab click */}
           <video
-            ref={doorVideoRef}
+            ref={(el) => {
+              doorVideoRef.current = el;
+              if (el) {
+                el.muted = true;
+                el.defaultMuted = true;
+                el.playsInline = true;
+              }
+            }}
             className="cockpit-door-video"
+            autoPlay={isActive}
             muted
             playsInline
             loop={false}
             preload={doorPreload}
             poster="/videos/cockpit-door-poster.jpg"
             onEnded={handleDoorEnded}
-            onError={handleDoorEnded}
+            onError={(e) => {
+              console.error('[CockpitSequence] cockpit-door video error:', e);
+              handleDoorEnded();
+            }}
             style={{
               position: 'absolute',
               inset: 0,
@@ -260,7 +297,14 @@ export default function CockpitSequence({
 
           {/* 2. cockpit-interior: plays immediately after cockpit-door ends and freezes last frame */}
           <video
-            ref={interiorVideoRef}
+            ref={(el) => {
+              interiorVideoRef.current = el;
+              if (el) {
+                el.muted = true;
+                el.defaultMuted = true;
+                el.playsInline = true;
+              }
+            }}
             className="cockpit-interior-video"
             muted
             playsInline
@@ -268,7 +312,10 @@ export default function CockpitSequence({
             preload="auto"
             poster="/videos/cockpit-interior-poster.jpg"
             onEnded={handleInteriorEnded}
-            onError={handleInteriorEnded}
+            onError={(e) => {
+              console.error('[CockpitSequence] cockpit-interior video error:', e);
+              handleInteriorEnded();
+            }}
             style={{
               position: 'absolute',
               inset: 0,
