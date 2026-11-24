@@ -63,7 +63,37 @@ const modelList = [
 function VehicleTile({ model, onSelectModel }) {
   const [lightCoords, setLightCoords] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
+  const [scrollParallax, setScrollParallax] = useState(0);
   const imgWrapRef = useRef(null);
+
+  // Scroll-linked parallax layer for gallery vehicle cards
+  React.useEffect(() => {
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    const prefersReducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    if (isTest || prefersReducedMotion) return;
+
+    let ticking = false;
+    const calculateParallax = () => {
+      if (!imgWrapRef.current) return;
+      const rect = imgWrapRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight || 800;
+      const centerDelta = (rect.top + rect.height / 2) - (windowHeight / 2);
+      const offset = Math.max(-18, Math.min(18, -centerDelta * 0.045));
+      setScrollParallax(offset);
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(calculateParallax);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    calculateParallax();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleMouseMove = (e) => {
     if (!imgWrapRef.current) return;
@@ -86,7 +116,7 @@ function VehicleTile({ model, onSelectModel }) {
         transition: 'border-color 0.25s ease, background-color 0.25s ease'
       }}
     >
-      {/* Full-bleed Product Photograph with Interactive Specular Sheen (0px radius) */}
+      {/* Full-bleed Product Photograph with Interactive Specular Sheen & Scroll Parallax */}
       <div
         ref={imgWrapRef}
         onMouseMove={handleMouseMove}
@@ -104,6 +134,10 @@ function VehicleTile({ model, onSelectModel }) {
           alt={model.name}
           loading="lazy"
           className="vehicle-tile-img"
+          style={{
+            transform: `translate3d(0, ${scrollParallax}px, 0) scale(${isHovered ? 1.07 : 1.03})`,
+            transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
         />
 
         {/* Dynamic Specular Light Reflection Follower */}

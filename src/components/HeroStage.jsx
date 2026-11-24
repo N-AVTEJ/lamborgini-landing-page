@@ -25,6 +25,7 @@ const heroSlides = [
 export default function HeroStage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     if (isPaused) return;
@@ -33,6 +34,27 @@ export default function HeroStage() {
     }, 6000);
     return () => clearInterval(interval);
   }, [isPaused]);
+
+  // Scroll-linked parallax across background, midground atmospheric depth, and foreground typography
+  useEffect(() => {
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    const prefersReducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    if (isTest || prefersReducedMotion) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const slide = heroSlides[currentSlide];
 
@@ -51,7 +73,7 @@ export default function HeroStage() {
         paddingTop: '64px' // navbar offset
       }}
     >
-      {/* Background Cinematic Imagery with 0px radius & subtle Ken Burns drift */}
+      {/* Background Cinematic Imagery Layer 1: Slow-rate Parallax */}
       {heroSlides.map((item, index) => (
         <div
           key={item.id}
@@ -62,9 +84,10 @@ export default function HeroStage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: index === currentSlide ? 1 : 0,
-            transform: index === currentSlide ? 'scale(1.035)' : 'scale(1.0)',
+            transform: `translate3d(0, ${scrollY * 0.35}px, 0) ${index === currentSlide ? 'scale(1.035)' : 'scale(1.0)'}`,
             transition: 'opacity 0.8s ease-in-out, transform 6s cubic-bezier(0.16, 1, 0.3, 1)',
-            zIndex: 1
+            zIndex: 1,
+            willChange: 'transform'
           }}
         >
           {/* Subtle dark vignette to maximize contrast for typography */}
@@ -78,14 +101,29 @@ export default function HeroStage() {
         </div>
       ))}
 
-      {/* Main Content Stage: Left-aligned column, max 50% width */}
+      {/* Midground Atmospheric Depth & Lighting Highlight Layer 2: Medium-rate Parallax */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          transform: `translate3d(0, ${scrollY * 0.18}px, 0)`,
+          background: 'radial-gradient(ellipse at 70% 40%, rgba(255, 192, 0, 0.08) 0%, transparent 60%)',
+          zIndex: 2,
+          willChange: 'transform'
+        }}
+      />
+
+      {/* Foreground Content Stage Layer 3: Subtle counter-rate Parallax */}
       <div
         className="defender-container lambo-container"
         style={{
           position: 'relative',
           zIndex: 10,
           width: '100%',
-          paddingBottom: '80px'
+          paddingBottom: '80px',
+          transform: `translate3d(0, ${scrollY * 0.06}px, 0)`,
+          willChange: 'transform'
         }}
       >
         <div
