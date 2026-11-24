@@ -1,116 +1,121 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, CheckCircle, ShieldCheck, Compass, Zap } from 'lucide-react';
-import { gsap } from 'gsap';
+import { useReducedMotion } from '../utils/useReducedMotion';
 
-export default function CockpitSequence() {
+function safePlay(video) {
+  if (!video || typeof video.play !== 'function') return;
+  try {
+    const p = video.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {});
+    }
+  } catch {
+    // ignore play errors in autoplay-restricted environments
+  }
+}
+
+export default function CockpitSequence({
+  isActive = false,
+  doorPreload = 'metadata',
+  forceReducedMotion
+}) {
   const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
-  const prefersReducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  const systemReducedMotion = useReducedMotion();
+  const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
   const alreadyPlayed = typeof window !== 'undefined' && Boolean(window.sessionStorage?.getItem('defender_cockpit_sequence_played'));
   const startStatic = isTest || prefersReducedMotion || alreadyPlayed;
 
-  // States: 'door-open' -> 'camera-push' -> 'cluster-boot' -> 'screen-boot' -> 'ambient-strip' -> 'idle'
+  // States: 'door-open' -> 'cluster-boot' -> 'screen-boot' -> 'ambient-strip' -> 'idle'
   const [phase, setPhase] = useState(startStatic ? 'idle' : 'door-open');
-  const [doorAngle, setDoorAngle] = useState(startStatic ? 68 : 0);
-  const [cameraZoom, setCameraZoom] = useState(startStatic ? 1.4 : 1);
   const [showInterior, setShowInterior] = useState(startStatic);
   const [clusterLit, setClusterLit] = useState(startStatic);
   const [screenBooting, setScreenBooting] = useState(false);
   const [screenOnline, setScreenOnline] = useState(startStatic);
   const [ambientLit, setAmbientLit] = useState(startStatic);
 
-  const timelineRef = useRef(null);
+  const doorVideoRef = useRef(null);
+  const interiorVideoRef = useRef(null);
   const timersRef = useRef([]);
 
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach((id) => clearTimeout(id));
     timersRef.current = [];
-    if (timelineRef.current) {
-      timelineRef.current.kill();
-      timelineRef.current = null;
-    }
   }, []);
 
-  const startTimeline = useCallback(() => {
+  const triggerPowerUpSequence = useCallback(() => {
     clearAllTimers();
+    // Step 1: Instrument cluster backlight illuminates
+    setPhase('cluster-boot');
+    setClusterLit(true);
+    setScreenBooting(true);
 
-    // GSAP Scripted Sequence Timeline
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setPhase('idle');
-        setAmbientLit(true);
-        if (typeof window !== 'undefined') {
-          window.sessionStorage?.setItem('defender_cockpit_sequence_played', 'true');
-        }
-      }
-    });
-    timelineRef.current = tl;
-
-    // Step 1: Driver door rotates open (3D transform, hinge-point perspective origin, 750ms eased)
-    tl.to({}, {
-      duration: 0.75,
-      ease: 'power2.out',
-      onStart: () => setPhase('door-open'),
-      onUpdate: function () {
-        const progress = this.progress();
-        setDoorAngle(Math.round(progress * 68));
-      }
-    }, 0.05);
-
-    // Step 2: Camera pushes in to interior POV
-    tl.to({}, {
-      duration: 0.7,
-      ease: 'power2.inOut',
-      onStart: () => setPhase('camera-push'),
-      onUpdate: function () {
-        const progress = this.progress();
-        setCameraZoom(1 + progress * 0.4);
-      }
-    }, 0.65);
-
-    // Step 3: Crossfade into interior cockpit view
-    tl.add(() => {
-      setShowInterior(true);
-      setPhase('cluster-boot');
-    }, 1.25);
-
-    // Step 4: Instrument cluster backlight fades up
-    tl.add(() => {
-      setClusterLit(true);
-      setPhase('screen-boot');
-      setScreenBooting(true);
-    }, 1.65);
-
-    // Step 5: Center Pivi Pro screen boots with logo flash
-    tl.add(() => {
+    const t1 = setTimeout(() => {
+      // Step 2: Center Pivi Pro screen boots with logo flash -> online
       setScreenBooting(false);
       setScreenOnline(true);
       setPhase('ambient-strip');
-    }, 2.3);
+    }, 600);
 
-    // Step 6: Ambient interior LED light strip fades in last
-    tl.add(() => {
+    const t2 = setTimeout(() => {
+      // Step 3: Ambient interior LED light strip fades in last
       setAmbientLit(true);
-    }, 2.9);
+      setPhase('idle');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage?.setItem('defender_cockpit_sequence_played', 'true');
+      }
+    }, 1200);
+
+    timersRef.current.push(t1, t2);
   }, [clearAllTimers]);
 
-  useEffect(() => {
-    if (!startStatic) {
-      startTimeline();
+  // Handle cockpit-door video ended: immediately play interior video & trigger power-up
+  const handleDoorEnded = useCallback(() => {
+    setShowInterior(true);
+    if (interiorVideoRef.current) {
+      interiorVideoRef.current.currentTime = 0;
+      safePlay(interiorVideoRef.current);
     }
+    triggerPowerUpSequence();
+  }, [triggerPowerUpSequence]);
+
+  // Handle cockpit-interior video ended: hold/freeze last frame into live UI state
+  const handleInteriorEnded = useCallback(() => {
+    if (interiorVideoRef.current) {
+      interiorVideoRef.current.pause();
+    }
+  }, []);
+
+  // When tab becomes active and hasn't played yet in this session
+  useEffect(() => {
+    if (isActive && !startStatic && phase === 'door-open') {
+      if (doorVideoRef.current) {
+        doorVideoRef.current.currentTime = 0;
+        safePlay(doorVideoRef.current);
+      }
+    }
+  }, [isActive, startStatic, phase]);
+
+  useEffect(() => {
     return () => clearAllTimers();
-  }, [startStatic, startTimeline, clearAllTimers]);
+  }, [clearAllTimers]);
 
   const handleReplay = () => {
     clearAllTimers();
     setPhase('door-open');
     setShowInterior(false);
-    setDoorAngle(0);
-    setCameraZoom(1);
     setClusterLit(false);
     setScreenBooting(false);
     setScreenOnline(false);
     setAmbientLit(false);
-    startTimeline();
+
+    if (doorVideoRef.current) {
+      doorVideoRef.current.currentTime = 0;
+      safePlay(doorVideoRef.current);
+    }
+    if (interiorVideoRef.current) {
+      interiorVideoRef.current.currentTime = 0;
+      interiorVideoRef.current.pause();
+    }
   };
 
   return (
@@ -121,149 +126,106 @@ export default function CockpitSequence() {
         width: '100%',
         height: '100%',
         overflow: 'hidden',
-        backgroundColor: '#000000',
-        perspective: '1200px'
+        backgroundColor: '#000000'
       }}
     >
-      {/* Exterior Stage with 3D Hinge-point Door Opening & Push-in POV */}
-      <div
-        className="cockpit-exterior-stage"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'url(/images/defender-octa-yellow-spotlight.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          transform: `scale(${cameraZoom}) translate3d(${cameraZoom > 1 ? '-8%' : '0px'}, ${cameraZoom > 1 ? '-3%' : '0px'}, 0)`,
-          transformOrigin: '35% 55%',
-          transition: prefersReducedMotion ? 'none' : 'transform 0.4s ease-out',
-          filter: 'contrast(1.1) brightness(0.95)',
-          opacity: showInterior ? 0 : 1,
-          pointerEvents: showInterior ? 'none' : 'auto',
-          zIndex: showInterior ? 1 : 2
-        }}
-      >
-        {/* 3D Driver Door Layer with Hinge Point Perspective Origin */}
-        <div
-          className="cockpit-driver-door-hinge"
-          style={{
-            position: 'absolute',
-            top: '32%',
-            left: '26%',
-            width: '28%',
-            height: '42%',
-            transformOrigin: 'left center',
-            transform: `rotateY(-${doorAngle}deg) translateZ(${doorAngle * 0.8}px)`,
-            transition: prefersReducedMotion ? 'none' : 'box-shadow 0.3s ease',
-            background: 'linear-gradient(135deg, rgba(255, 192, 0, 0.92) 0%, rgba(200, 150, 0, 0.65) 100%)',
-            borderLeft: '4px solid var(--color-carbony-black)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.45)',
-            borderBottom: '3px solid var(--color-graphite-border)',
-            boxShadow: doorAngle > 0 ? '24px 12px 48px rgba(0, 0, 0, 0.95)' : 'none',
-            zIndex: 8,
-            pointerEvents: 'none',
-            transformStyle: 'preserve-3d'
-          }}
-        >
-          {/* Outer swage crease line */}
-          <div
+      {/* Background Media Layers: Videos or Reduced Motion Static Posters */}
+      {prefersReducedMotion ? (
+        showInterior ? (
+          <img
+            src="/videos/cockpit-interior-poster.jpg"
+            alt="Defender Cockpit Interior"
+            className="cockpit-interior-poster"
             style={{
               position: 'absolute',
-              top: '46%',
-              left: '4%',
-              right: '4%',
-              height: '1px',
-              backgroundColor: 'rgba(255, 255, 255, 0.35)'
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              zIndex: 1
             }}
           />
-
-          {/* Door Window Pane with Authentic Safari Glass Tint */}
-          <div
+        ) : (
+          <img
+            src="/videos/cockpit-door-poster.jpg"
+            alt="Defender Cockpit Door"
+            className="cockpit-door-poster"
             style={{
               position: 'absolute',
-              top: '5%',
-              left: '5%',
-              right: '7%',
-              height: '38%',
-              backgroundColor: 'rgba(17, 22, 29, 0.88)',
-              border: '1px solid var(--color-graphite-border)'
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              zIndex: 1
             }}
           />
-
-          {/* Flush Satin Black Door Handle */}
-          <div
+        )
+      ) : (
+        <>
+          {/* 1. cockpit-door: plays once on COCKPIT tab click */}
+          <video
+            ref={doorVideoRef}
+            className="cockpit-door-video"
+            muted
+            playsInline
+            loop={false}
+            preload={doorPreload}
+            poster="/videos/cockpit-door-poster.jpg"
+            onEnded={handleDoorEnded}
             style={{
               position: 'absolute',
-              top: '52%',
-              right: '10%',
-              width: '20%',
-              height: '6%',
-              backgroundColor: 'var(--color-carbony-black)',
-              border: '1px solid var(--color-graphite-border)',
-              boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.7)'
-            }}
-          />
-
-          {/* Lower Protective Matte Cladding */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '18%',
-              backgroundColor: 'rgba(24, 24, 24, 0.95)',
-              borderTop: '1px solid var(--color-graphite-border)'
-            }}
-          />
-        </div>
-
-        {/* Door Frame Aperture Interior Inset Glow */}
-        {doorAngle > 10 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '32%',
-              left: '26%',
-              width: '26%',
-              height: '42%',
-              backgroundColor: 'rgba(10, 10, 10, 0.95)',
-              border: '1px solid var(--color-graphite-border)',
-              zIndex: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: showInterior ? 0 : 1,
+              pointerEvents: showInterior ? 'none' : 'auto',
+              zIndex: showInterior ? 1 : 3,
+              transition: 'opacity 0.45s ease'
             }}
           >
-            <div
-              style={{
-                fontSize: '10px',
-                color: 'var(--color-giallo-vivo)',
-                letterSpacing: '0.04em',
-                opacity: Math.min(1, doorAngle / 50)
-              }}
-            >
-              ENTERING COCKPIT...
-            </div>
-          </div>
-        )}
-      </div>
+            <source src="/videos/cockpit-door.webm" type="video/webm" />
+            <source src="/videos/cockpit-door.mp4" type="video/mp4" />
+          </video>
 
-      {/* Interior Cockpit POV with Sequential Lighting Power-Up */}
+          {/* 2. cockpit-interior: plays immediately after cockpit-door ends and freezes last frame */}
+          <video
+            ref={interiorVideoRef}
+            className="cockpit-interior-video"
+            muted
+            playsInline
+            loop={false}
+            preload="auto"
+            poster="/videos/cockpit-interior-poster.jpg"
+            onEnded={handleInteriorEnded}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: showInterior ? 1 : 0,
+              pointerEvents: showInterior ? 'auto' : 'none',
+              zIndex: 2,
+              transition: 'opacity 0.45s ease'
+            }}
+          >
+            <source src="/videos/cockpit-interior.webm" type="video/webm" />
+            <source src="/videos/cockpit-interior.mp4" type="video/mp4" />
+          </video>
+        </>
+      )}
+
+      {/* Interior Cockpit POV Overlays (HUD, Center Screen, Ambient Strip) */}
       <div
         className="cockpit-interior-view"
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'url(/images/defender-interior-cockpit.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'contrast(1.12) brightness(1.02)',
           opacity: showInterior ? 1 : 0,
-          transform: showInterior ? 'scale(1)' : 'scale(1.06)',
-          transition: prefersReducedMotion ? 'none' : 'opacity 0.55s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
           pointerEvents: showInterior ? 'auto' : 'none',
-          zIndex: showInterior ? 3 : 1
+          zIndex: 4,
+          transition: prefersReducedMotion ? 'none' : 'opacity 0.45s ease'
         }}
       >
         {/* Subtle Ambient Vignette */}

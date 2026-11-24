@@ -74,3 +74,12 @@ class MockAudioContext {
 
 window.AudioContext = MockAudioContext;
 window.webkitAudioContext = MockAudioContext;
+
+// Polyfill HTMLMediaElement methods for JSDOM
+if (typeof window !== 'undefined' && typeof window.HTMLMediaElement !== 'undefined') {
+  window.HTMLMediaElement.prototype.play = function () {
+    return Promise.resolve();
+  };
+  window.HTMLMediaElement.prototype.pause = function () {};
+  window.HTMLMediaElement.prototype.load = function () {};
+}

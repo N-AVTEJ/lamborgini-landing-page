@@ -111,6 +111,7 @@ export default function ShowroomSpotlightStage() {
   const [peakRPM, setPeakRPM] = useState(0);
   const [studioColor, setStudioColor] = useState('#ffc000');
   const [studioPresetId, setStudioPresetId] = useState('giallo-vivo');
+  const [cockpitDoorPreload, setCockpitDoorPreload] = useState('metadata');
   const switchTimerRef = useRef(null);
 
   // Keep currentAngleRef in sync
@@ -391,7 +392,10 @@ export default function ShowroomSpotlightStage() {
                 zIndex: currentAngle === 'cockpit' ? 4 : (previousAngle === 'cockpit' ? 3 : 1)
               }}
             >
-              <CockpitSequence />
+              <CockpitSequence
+                isActive={currentAngle === 'cockpit'}
+                doorPreload={cockpitDoorPreload}
+              />
             </div>
 
             {/* Perspective Layer 3: STUDIO 3D Configurator */}
@@ -554,7 +558,12 @@ export default function ShowroomSpotlightStage() {
               {Object.keys(angleImages).map((angleKey) => (
                 <button
                   key={angleKey}
-                  onClick={() => handleSelectAngle(angleKey)}
+                  onClick={() => {
+                    if (angleKey === 'cockpit') setCockpitDoorPreload('auto');
+                    handleSelectAngle(angleKey);
+                  }}
+                  onMouseEnter={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
+                  onFocus={angleKey === 'cockpit' ? () => setCockpitDoorPreload('auto') : undefined}
                   className="btn-outlined spec-chip-tactile"
                   style={{
                     padding: '8px 14px',
