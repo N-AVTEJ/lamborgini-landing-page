@@ -1,0 +1,431 @@
+/* Lamborghini Design System Tokens & Base Styles */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400&family=Bebas+Neue&family=Rajdhani:wght@400&display=swap');
+
+:root {
+  /* Colors */
+  --color-giallo-vivo: #ffc000;
+  --color-giallo-ombra: #917300;
+  --color-carbony-black: #202020;
+  --color-pure-black: #000000;
+  --color-carbon-deep: #181818;
+  --color-pearl-white: #ffffff;
+  --color-marble-gray: #f5f5f5;
+  --color-graphite-border: #494949;
+  --color-steel-mid: #7d7d7d;
+  --color-ash-border: #969696;
+  --color-anvil: #313131;
+
+  /* Typography — Font Families */
+  --font-lambotype: 'LamboType', 'Barlow Condensed', 'Rajdhani', 'Bebas Neue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-open-sans: 'Open Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography — Scale */
+  --text-caption: 10px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.23px;
+
+  --text-body: 16px;
+  --leading-body: 1.5;
+  --tracking-body: 0.37px;
+
+  --text-subheading: 18px;
+  --leading-subheading: 1.5;
+  --tracking-subheading: 0.41px;
+
+  --text-heading-sm: 27px;
+  --leading-heading-sm: 1.37;
+  --tracking-heading-sm: 0.62px;
+
+  --text-heading: 32px;
+  --leading-heading: 1.38;
+  --tracking-heading: 0.74px;
+
+  --text-heading-lg: 40px;
+  --leading-heading-lg: 1.19;
+  --tracking-heading-lg: 0.92px;
+
+  --text-display: 54px;
+  --leading-display: 1.13;
+  --tracking-display: 1.24px;
+
+  --text-display-lg: 80px;
+  --leading-display-lg: 1;
+  --tracking-display-lg: 1.84px;
+
+  --text-hero: 120px;
+  --leading-hero: 0.92;
+  --tracking-hero: 2.76px;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+
+  /* Spacing */
+  --spacing-unit: 8px;
+  --spacing-8: 8px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+  --spacing-160: 160px;
+
+  /* Layout */
+  --page-max-width: 1440px;
+  --section-gap: 80px;
+  --card-padding: 24px;
+  --element-gap: 24px;
+
+  /* Named Radii — Hard edges non-negotiable */
+  --radius-cards: 0px;
+  --radius-badges: 0px;
+  --radius-images: 0px;
+  --radius-buttons: 0px;
+
+  /* Surfaces */
+  --surface-canvas-white: #ffffff;
+  --surface-marble: #f5f5f5;
+  --surface-carbony: #202020;
+  --surface-carbon-deep: #181818;
+  --surface-pure-black: #000000;
+}
+
+/* Strict Brand Resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--surface-carbony);
+  color: var(--color-pearl-white);
+}
+
+body {
+  font-family: var(--font-lambotype);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  background-color: var(--surface-carbony);
+  color: var(--color-pearl-white);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Headings */
+h1, h2, h3, h4, h5, h6, .lambo-heading {
+  font-family: var(--font-lambotype);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.0230em;
+  line-height: 1.1;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  font-family: var(--font-lambotype);
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+button {
+  font-family: var(--font-lambotype);
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  font-weight: 400;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0 !important;
+}
+
+/* Container */
+.lambo-container {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-32);
+  padding-right: var(--spacing-32);
+}
+
+@media (max-width: 768px) {
+  .lambo-container {
+    padding-left: var(--spacing-16);
+    padding-right: var(--spacing-16);
+  }
+}
+
+/* Surfaces */
+.surface-canvas {
+  background-color: var(--surface-canvas-white);
+  color: var(--color-carbony-black);
+}
+
+.surface-marble {
+  background-color: var(--surface-marble);
+  color: var(--color-pure-black);
+}
+
+.surface-carbony {
+  background-color: var(--surface-carbony);
+  color: var(--color-pearl-white);
+}
+
+.surface-carbon-deep {
+  background-color: var(--surface-carbon-deep);
+  color: var(--color-pearl-white);
+}
+
+.surface-pure-black {
+  background-color: var(--surface-pure-black);
+  color: var(--color-pearl-white);
+}
+
+/* Specific Section Heading Block (Signature Pattern) */
+.lambo-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: var(--spacing-80);
+  padding-bottom: var(--spacing-80);
+  width: 100%;
+  border: none;
+}
+
+.lambo-section-header .section-title {
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.lambo-section-header .section-action {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.0230em;
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+}
+
+.lambo-section-header .section-action:hover {
+  border-bottom-color: currentColor;
+}
+
+@media (max-width: 768px) {
+  .lambo-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-16);
+    padding-top: var(--spacing-48);
+    padding-bottom: var(--spacing-48);
+  }
+  .lambo-section-header .section-title {
+    font-size: var(--text-heading-lg);
+  }
+}
+
+/* Giallo Action Button — Exactly one hit per screen */
+.btn-giallo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-16);
+  background-color: var(--color-giallo-vivo);
+  color: var(--color-pearl-white);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.btn-giallo:hover {
+  background-color: var(--color-giallo-ombra);
+  color: var(--color-pearl-white);
+}
+
+/* Ghost Link Button */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  color: inherit;
+  padding: 8px 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.btn-ghost::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 1px;
+  background-color: currentColor;
+  transition: width 0.25s ease;
+}
+
+.btn-ghost:hover::after {
+  width: 100%;
+}
+
+/* Outlined Nav Button */
+.btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  background: transparent;
+  border: 1px solid var(--color-steel-mid);
+  color: inherit;
+  font-size: 13px;
+  letter-spacing: 0.0230em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-outlined:hover {
+  border-color: var(--color-pearl-white);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.surface-canvas .btn-outlined:hover,
+.surface-marble .btn-outlined:hover {
+  border-color: var(--color-pure-black);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Three-Column Story Grid */
+.story-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-24);
+  width: 100%;
+  padding-bottom: var(--spacing-80);
+}
+
+@media (max-width: 900px) {
+  .story-grid-3 {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-32);
+    padding-bottom: var(--spacing-48);
+  }
+}
+
+/* Spotlight Stage Dramatic Styling */
+.showroom-stage-wrap {
+  position: relative;
+  background-color: var(--surface-pure-black);
+  overflow: hidden;
+  padding-top: var(--spacing-80);
+  padding-bottom: var(--spacing-80);
+}
+
+/* Conical spotlight light beam */
+.showroom-spotlight-beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 85%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.12) 35%, rgba(0, 0, 0, 0) 75%);
+  clip-path: polygon(30% 0%, 70% 0%, 95% 100%, 5% 100%);
+  z-index: 2;
+  transition: opacity 0.5s ease;
+}
+
+.showroom-spotlight-beam.dramatic {
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0) 80%);
+}
+
+.showroom-spotlight-beam.stealth {
+  opacity: 0.15;
+}
+
+/* Floor reflection overlay */
+.showroom-floor-reflection {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Hairline borders */
+.border-graphite-t {
+  border-top: 1px solid var(--color-graphite-border);
+}
+
+.border-graphite-b {
+  border-bottom: 1px solid var(--color-graphite-border);
+}
+
+.border-ash-t {
+  border-top: 1px solid var(--color-ash-border);
+}
+
+.border-ash-b {
+  border-bottom: 1px solid var(--color-ash-border);
+}
+
+/* Audio tachometer visualizer animation */
+@keyframes pulseTach {
+  0% { transform: scaleY(0.2); }
+  50% { transform: scaleY(1); }
+  100% { transform: scaleY(0.2); }
+}
+
+.tach-bar {
+  display: inline-block;
+  width: 3px;
+  background-color: var(--color-pearl-white);
+  margin-right: 2px;
+  height: 16px;
+  transform-origin: bottom;
+}
+
+.tach-bar.active {
+  animation: pulseTach 0.35s infinite ease-in-out;
+}

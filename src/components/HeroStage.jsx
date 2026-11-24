@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Pause, Play } from 'lucide-react';
+
+const heroSlides = [
+  {
+    id: 'revuelto',
+    eyebrow: 'FROM NOW ON',
+    title: 'REVUELTO',
+    subtitle: 'THE FIRST SUPER SPORTS V12 HPEV HYBRID — 1015 CV',
+    image: '/images/hero-cinematic-night.jpg',
+    actionText: 'EXPLORE REVUELTO',
+    targetSection: '#showroom-spotlight'
+  },
+  {
+    id: 'temerario',
+    eyebrow: 'BEYOND THE SPEED OF SOUND',
+    title: 'TEMERARIO',
+    subtitle: 'TWIN-TURBO V8 HPEV POWER WITH 10,000 RPM REDLINE',
+    image: '/images/temerario-studio.jpg',
+    actionText: 'DISCOVER TEMERARIO',
+    targetSection: '#models'
+  }
+];
+
+export default function HeroStage() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  const slide = heroSlides[currentSlide];
+
+  return (
+    <section
+      aria-label="Hero Stage"
+      style={{
+        position: 'relative',
+        width: '100%',
+        minHeight: '100vh',
+        backgroundColor: 'var(--color-carbony-black)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        paddingTop: '64px' // navbar offset
+      }}
+    >
+      {/* Background Cinematic Imagery with 0px radius */}
+      {heroSlides.map((item, index) => (
+        <div
+          key={item.id}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${item.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: index === currentSlide ? 1 : 0,
+            transition: 'opacity 0.8s ease-in-out',
+            zIndex: 1
+          }}
+        >
+          {/* Subtle dark vignette to maximize contrast for typography */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to right, rgba(24, 24, 24, 0.85) 0%, rgba(24, 24, 24, 0.4) 45%, rgba(0, 0, 0, 0.2) 100%), linear-gradient(to top, rgba(24, 24, 24, 0.95) 0%, transparent 40%)'
+            }}
+          />
+        </div>
+      ))}
+
+      {/* Main Content Stage: Left-aligned column, max 50% width */}
+      <div
+        className="lambo-container"
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          width: '100%',
+          paddingBottom: '80px'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            width: '100%',
+            flexWrap: 'wrap',
+            gap: '32px'
+          }}
+        >
+          {/* Content Column: Max 50% viewport width */}
+          <div style={{ maxWidth: '640px', width: '100%' }}>
+            {/* Eyebrow Label: 12-16px LamboType UPPERCASE */}
+            <div
+              style={{
+                fontSize: '14px',
+                letterSpacing: '0.0230em',
+                lineHeight: '1.5',
+                color: 'var(--color-pearl-white)',
+                marginBottom: '16px',
+                textTransform: 'uppercase'
+              }}
+            >
+              {slide.eyebrow}
+            </div>
+
+            {/* Monolithic Display Headline: 80-120px LamboType UPPERCASE, line-height 0.92 */}
+            <h1
+              style={{
+                fontSize: 'clamp(80px, 8.5vw, 120px)',
+                lineHeight: 0.92,
+                letterSpacing: '0.0230em',
+                color: 'var(--color-pearl-white)',
+                marginBottom: '20px',
+                textTransform: 'uppercase'
+              }}
+            >
+              {slide.title}
+            </h1>
+
+            {/* Subtitle / Spec statement */}
+            <p
+              style={{
+                fontSize: 'clamp(14px, 2vw, 18px)',
+                lineHeight: 1.35,
+                letterSpacing: '0.0230em',
+                color: 'var(--color-pearl-white)',
+                marginBottom: '32px',
+                textTransform: 'uppercase'
+              }}
+            >
+              {slide.subtitle}
+            </p>
+
+            {/* Giallo Action Button — Sole vivid yellow element on this screen */}
+            <div>
+              <a
+                href={slide.targetSection}
+                className="btn-giallo"
+                style={{
+                  fontSize: '14px',
+                  padding: '16px 24px',
+                  color: 'var(--color-pearl-white)'
+                }}
+              >
+                <span>{slide.actionText}</span>
+                <ArrowRight size={16} strokeWidth={2} />
+              </a>
+            </div>
+          </div>
+
+          {/* Carousel Navigation Pips & Hexagonal Pause Button anchored bottom-right */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '24px',
+              paddingBottom: '8px'
+            }}
+          >
+            {/* Horizontal short lines (active + inactive at ~40px width, 1–2px height, #ffffff, spacing 24px) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              {heroSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  style={{
+                    width: '40px',
+                    height: '2px',
+                    backgroundColor: 'var(--color-pearl-white)',
+                    opacity: idx === currentSlide ? 1 : 0.35,
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.25s ease'
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Hexagonal Pause Button outlined in #ffffff */}
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              title={isPaused ? "Resume Carousel" : "Pause Carousel"}
+              aria-label={isPaused ? "Play slide carousel" : "Pause slide carousel"}
+              style={{
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              {/* Hexagon outline SVG */}
+              <svg width="36" height="36" viewBox="0 0 40 40" style={{ position: 'absolute', inset: 0 }}>
+                <polygon
+                  points="20,2 36,11 36,29 20,38 4,29 4,11"
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                  fill="transparent"
+                />
+              </svg>
+              <span style={{ position: 'relative', zIndex: 2, color: '#ffffff' }}>
+                {isPaused ? <Play size={14} fill="#ffffff" /> : <Pause size={14} fill="#ffffff" />}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
