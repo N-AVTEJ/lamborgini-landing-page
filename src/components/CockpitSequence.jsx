@@ -17,13 +17,14 @@ function safePlay(video) {
 export default function CockpitSequence({
   isActive = false,
   doorPreload = 'metadata',
-  forceReducedMotion
+  forceReducedMotion,
+  startStatic: propStartStatic,
+  replayTrigger = 0
 }) {
   const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
   const systemReducedMotion = useReducedMotion();
   const prefersReducedMotion = forceReducedMotion !== undefined ? forceReducedMotion : systemReducedMotion;
-  const alreadyPlayed = typeof window !== 'undefined' && Boolean(window.sessionStorage?.getItem('defender_cockpit_sequence_played'));
-  const startStatic = isTest || prefersReducedMotion || alreadyPlayed;
+  const startStatic = propStartStatic !== undefined ? propStartStatic : (isTest || prefersReducedMotion);
 
   // States: 'door-open' -> 'cluster-boot' -> 'screen-boot' -> 'ambient-strip' -> 'idle'
   const [phase, setPhase] = useState(startStatic ? 'idle' : 'door-open');
@@ -36,6 +37,8 @@ export default function CockpitSequence({
   const doorVideoRef = useRef(null);
   const interiorVideoRef = useRef(null);
   const timersRef = useRef([]);
+  const prevActiveRef = useRef(isActive);
+  const prevReplayTriggerRef = useRef(replayTrigger);
 
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach((id) => clearTimeout(id));
@@ -60,9 +63,6 @@ export default function CockpitSequence({
       // Step 3: Ambient interior LED light strip fades in last
       setAmbientLit(true);
       setPhase('idle');
-      if (typeof window !== 'undefined') {
-        window.sessionStorage?.setItem('defender_cockpit_sequence_played', 'true');
-      }
     }, 1200);
 
     timersRef.current.push(t1, t2);
@@ -85,21 +85,7 @@ export default function CockpitSequence({
     }
   }, []);
 
-  // When tab becomes active and hasn't played yet in this session
-  useEffect(() => {
-    if (isActive && !startStatic && phase === 'door-open') {
-      if (doorVideoRef.current) {
-        doorVideoRef.current.currentTime = 0;
-        safePlay(doorVideoRef.current);
-      }
-    }
-  }, [isActive, startStatic, phase]);
-
-  useEffect(() => {
-    return () => clearAllTimers();
-  }, [clearAllTimers]);
-
-  const handleReplay = () => {
+  const resetAndPlay = useCallback(() => {
     clearAllTimers();
     setPhase('door-open');
     setShowInterior(false);
@@ -116,6 +102,36 @@ export default function CockpitSequence({
       interiorVideoRef.current.currentTime = 0;
       interiorVideoRef.current.pause();
     }
+  }, [clearAllTimers]);
+
+  // When tab becomes active or is clicked from another tab: reset and play cockpit-door
+  useEffect(() => {
+    const justBecameActive = isActive && !prevActiveRef.current;
+    prevActiveRef.current = isActive;
+
+    if (justBecameActive && !startStatic) {
+      resetAndPlay();
+    } else if (isActive && !startStatic && phase === 'door-open') {
+      if (doorVideoRef.current) {
+        safePlay(doorVideoRef.current);
+      }
+    }
+  }, [isActive, startStatic, phase, resetAndPlay]);
+
+  // Handle replay trigger from parent (e.g. clicking COCKPIT tab while already active)
+  useEffect(() => {
+    if (replayTrigger > prevReplayTriggerRef.current) {
+      prevReplayTriggerRef.current = replayTrigger;
+      resetAndPlay();
+    }
+  }, [replayTrigger, resetAndPlay]);
+
+  useEffect(() => {
+    return () => clearAllTimers();
+  }, [clearAllTimers]);
+
+  const handleReplay = () => {
+    resetAndPlay();
   };
 
   return (
