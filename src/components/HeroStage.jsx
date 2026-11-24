@@ -3,21 +3,21 @@ import { ArrowRight, Pause, Play } from 'lucide-react';
 
 const heroSlides = [
   {
-    id: 'revuelto',
-    eyebrow: 'FROM NOW ON',
-    title: 'REVUELTO',
-    subtitle: 'THE FIRST SUPER SPORTS V12 HPEV HYBRID — 1015 CV',
-    image: '/images/hero-cinematic-night.jpg',
-    actionText: 'EXPLORE REVUELTO',
+    id: 'defender-octa',
+    eyebrow: 'MASTER OF EXTREMES',
+    title: 'DEFENDER OCTA',
+    subtitle: 'THE MOST POWERFUL & CAPABLE DEFENDER EVER BUILT — 635 PS TWIN-TURBO V8',
+    image: '/images/defender-octa-yellow-spotlight.jpg',
+    actionText: 'EXPLORE DEFENDER OCTA',
     targetSection: '#showroom-spotlight'
   },
   {
-    id: 'temerario',
-    eyebrow: 'BEYOND THE SPEED OF SOUND',
-    title: 'TEMERARIO',
-    subtitle: 'TWIN-TURBO V8 HPEV POWER WITH 10,000 RPM REDLINE',
-    image: '/images/temerario-studio.jpg',
-    actionText: 'DISCOVER TEMERARIO',
+    id: 'defender-110',
+    eyebrow: 'UNSTOPPABLE BY DESIGN',
+    title: 'DEFENDER 110',
+    subtitle: 'PURPOSEFUL GEOMETRY, 525 PS SUPERCHARGED V8 AND WORLD-CONQUERING 4X4',
+    image: '/images/defender-110-hero-night.jpg',
+    actionText: 'DISCOVER DEFENDER 110',
     targetSection: '#models'
   }
 ];
@@ -113,7 +113,7 @@ export default function HeroStage() {
               {slide.eyebrow}
             </div>
 
-            {/* Monolithic Display Headline: 80-120px LamboType UPPERCASE, line-height 0.92 */}
+            {/* Monolithic Display Headline: 80-120px UPPERCASE, line-height 0.92 */}
             <h1
               style={{
                 fontSize: 'clamp(80px, 8.5vw, 120px)',
