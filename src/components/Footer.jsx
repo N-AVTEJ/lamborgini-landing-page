@@ -56,7 +56,7 @@ export default function Footer() {
         paddingBottom: 'var(--spacing-48)'
       }}
     >
-      <div className="lambo-container">
+      <div className="defender-container lambo-container">
         {/* Brand Header */}
         <div
           style={{
@@ -174,7 +174,7 @@ export default function Footer() {
               letterSpacing: '0.0230em'
             }}
           >
-            Fuel consumption and emission figures for Defender OCTA: Combined Fuel Consumption: 11.5 l/100km; Combined CO2 Emissions: 262 g/km (WLTP). Fuel consumption figures for Defender 110 V8: Combined Fuel Consumption: 12.8 l/100km; Combined CO2 Emissions: 290 g/km (WLTP). Fuel consumption figures for Defender 90 V8: Combined Fuel Consumption: 12.6 l/100km; Combined CO2 Emissions: 285 g/km (WLTP). Values are determined in accordance with the mandatory European measurement procedure.
+            Fuel consumption and emission figures for Defender OCTA: Combined Fuel Consumption: 11.5 l/100km; Combined CO2 Emissions: 262 g/km (WLTP). Fuel consumption figures for Defender 110 V8: Combined Fuel Consumption: 12.8 l/100km; Combined CO2 Emissions: 290 g/km (WLTP). Fuel consumption figures for Defender 90 V8: Combined Fuel Consumption: 12.6 l/100km; Combined CO2 Emissions: 285 g/km (WLTP). Fuel consumption figures for Defender 130 V8: Combined Fuel Consumption: 13.1 l/100km; Combined CO2 Emissions: 298 g/km (WLTP). Values are determined in accordance with the mandatory European measurement procedure.
           </p>
         </div>
 

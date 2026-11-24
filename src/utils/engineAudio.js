@@ -7,6 +7,8 @@ class DefenderV8EngineSynthesizer {
     this.currentRPM = 0;
     this.onRPMUpdate = null;
     this.animFrameId = null;
+    this.revAnimFrameId = null;
+    this.stopTimeoutId = null;
   }
 
   init() {
@@ -34,6 +36,10 @@ class DefenderV8EngineSynthesizer {
 
   startIdle(onRPM) {
     this.init();
+    if (this.stopTimeoutId) {
+      clearTimeout(this.stopTimeoutId);
+      this.stopTimeoutId = null;
+    }
     if (this.isPlaying) return;
     this.isPlaying = true;
     this.onRPMUpdate = onRPM;
@@ -88,7 +94,8 @@ class DefenderV8EngineSynthesizer {
   }
 
   revEngine() {
-    if (!this.isPlaying || !this.ctx) return;
+    // Guard against re-triggering while a rev sweep is already in progress
+    if (!this.isPlaying || !this.ctx || this.isRevving) return;
     this.isRevving = true;
     const t = this.ctx.currentTime;
 
@@ -118,6 +125,9 @@ class DefenderV8EngineSynthesizer {
     this.exhaustFilter.frequency.exponentialRampToValueAtTime(380, t + 2.1);
     this.masterGain.gain.linearRampToValueAtTime(0.38, t + 2.1);
 
+    // Cancel any previous rev animation frame
+    if (this.revAnimFrameId) cancelAnimationFrame(this.revAnimFrameId);
+
     // Animate RPM value
     const startT = performance.now();
     const animateRev = (now) => {
@@ -135,32 +145,45 @@ class DefenderV8EngineSynthesizer {
       } else {
         this.currentRPM = 750;
         this.isRevving = false;
+        if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
         return;
       }
       if (this.onRPMUpdate) this.onRPMUpdate(this.currentRPM);
-      if (this.isRevving) requestAnimationFrame(animateRev);
+      if (this.isRevving) {
+        this.revAnimFrameId = requestAnimationFrame(animateRev);
+      }
     };
-    requestAnimationFrame(animateRev);
+    this.revAnimFrameId = requestAnimationFrame(animateRev);
   }
 
   stop() {
     if (!this.isPlaying || !this.ctx) return;
+    this.isPlaying = false;
+    this.isRevving = false;
+    if (this.stopTimeoutId) clearTimeout(this.stopTimeoutId);
+    if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+    if (this.revAnimFrameId) cancelAnimationFrame(this.revAnimFrameId);
+
     const t = this.ctx.currentTime;
-    this.masterGain.gain.linearRampToValueAtTime(0, t + 0.4);
-    setTimeout(() => {
+    try {
+      this.masterGain.gain.cancelScheduledValues(t);
+      this.masterGain.gain.linearRampToValueAtTime(0, t + 0.35);
+    } catch {
+      // fallback
+    }
+
+    this.stopTimeoutId = setTimeout(() => {
       try {
-        if (this.osc1) this.osc1.stop();
-        if (this.osc2) this.osc2.stop();
-        if (this.osc3) this.osc3.stop();
+        if (this.osc1) { this.osc1.stop(); this.osc1.disconnect(); }
+        if (this.osc2) { this.osc2.stop(); this.osc2.disconnect(); }
+        if (this.osc3) { this.osc3.stop(); this.osc3.disconnect(); }
       } catch {
         // ignore if already stopped
       }
-      this.isPlaying = false;
-      this.isRevving = false;
       this.currentRPM = 0;
       if (this.onRPMUpdate) this.onRPMUpdate(0);
-      if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
-    }, 450);
+      this.stopTimeoutId = null;
+    }, 400);
   }
 
   updateRPMLoop() {
