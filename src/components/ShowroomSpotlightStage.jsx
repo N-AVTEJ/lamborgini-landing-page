@@ -433,7 +433,7 @@ export default function ShowroomSpotlightStage() {
                 position: 'absolute',
                 top: '24px',
                 left: '24px',
-                display: 'flex',
+                display: currentAngle === 'studio' ? 'none' : 'flex',
                 gap: '12px',
                 zIndex: 10,
                 pointerEvents: 'none'

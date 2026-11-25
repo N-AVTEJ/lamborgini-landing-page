@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useReducedMotion } from '../utils/useReducedMotion';
-import { DEFENDER_PALETTE } from '../utils/defenderStudioConfig';
+import { DEFENDER_PALETTE, parseSafeColor } from '../utils/defenderStudioConfig';
 
 function safePlay(video, name = 'turntableVideo') {
   if (!video || typeof video.play !== 'function') return;
@@ -56,6 +56,14 @@ function createContactShadowTexture() {
   return new THREE.CanvasTexture(shadowCanvas);
 }
 
+const CAMERA_VIEWPOINTS = [
+  { pos: [4.8, 1.9, 5.0], target: [0, 0.75, 0], label: '3/4 FRONT ANGLE' },
+  { pos: [0, 1.5, 6.2], target: [0, 0.75, 0], label: 'FRONT HEADLINE' },
+  { pos: [-6.4, 1.4, 0], target: [0, 0.75, 0], label: 'SIDE PROFILE' },
+  { pos: [-4.8, 1.9, -5.0], target: [0, 0.75, 0], label: 'REAR EXPEDITION' },
+  { pos: [0.01, 7.5, 0.01], target: [0, 0.75, 0], label: 'OVERHEAD AERIAL' }
+];
+
 export default function StudioConfigurator({
   initialColor = '#ffc000',
   currentColor: propCurrentColor,
@@ -76,6 +84,7 @@ export default function StudioConfigurator({
   const colorInputRef = useRef(null);
   const turntableVideoRef = useRef(null);
   const containerRef = useRef(null);
+  const stageContainerRef = useRef(null);
   const canvasRef = useRef(null);
 
   const currentColor = propCurrentColor !== undefined ? propCurrentColor : internalColor;
@@ -106,7 +115,8 @@ export default function StudioConfigurator({
   const paintMaterialsRef = useRef([]);
   const animFrameIdRef = useRef(null);
   const colorAnimIdRef = useRef(null);
-  const current3DColorRef = useRef(new THREE.Color(initialColor));
+  const cameraTransitionAnimIdRef = useRef(null);
+  const current3DColorRef = useRef(parseSafeColor(initialColor));
 
   // Pause background turntable video when tab is inactive to preserve CPU, GPU & battery
   useEffect(() => {
@@ -134,7 +144,7 @@ export default function StudioConfigurator({
     const materials = paintMaterialsRef.current;
     if (!materials || !materials.length) return;
 
-    const targetColor = new THREE.Color(currentColor);
+    const targetColor = parseSafeColor(currentColor);
     const spec = DEFENDER_PALETTE.find((s) => s.id === selectedPresetId) || {};
     const targetMetalness = spec.metalness ?? 0.55;
     const targetRoughness = spec.roughness ?? 0.22;
@@ -201,9 +211,9 @@ export default function StudioConfigurator({
     const canvas = canvasRef.current;
     if (!canvas || !isWebGLAvailable()) return;
 
-    const container = containerRef.current || canvas.parentElement;
-    const width = container ? container.clientWidth || 800 : 800;
-    const height = container ? container.clientHeight || 500 : 500;
+    const stage = stageContainerRef.current || canvas.parentElement;
+    const width = stage ? stage.clientWidth || 800 : 800;
+    const height = stage ? stage.clientHeight || 500 : 500;
 
     // 1. Scene
     const scene = new THREE.Scene();
@@ -211,8 +221,8 @@ export default function StudioConfigurator({
 
     // 2. Camera: heroic automotive 3/4 front framing
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(4.2, 1.8, 4.6);
-    camera.lookAt(0, 0.85, 0);
+    camera.position.set(4.8, 1.9, 5.0);
+    camera.lookAt(0, 0.75, 0);
     cameraRef.current = camera;
 
     // 3. Renderer with high performance & alpha transparency over turntable video
@@ -321,19 +331,40 @@ export default function StudioConfigurator({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.target.set(0, 0.85, 0);
+    controls.target.set(0, 0.75, 0);
     controls.minDistance = 3.0;
     controls.maxDistance = 9.0;
     controls.maxPolarAngle = Math.PI / 2 - 0.04; // Keep camera above turntable floor
     controls.minPolarAngle = 0.1;
     controls.autoRotate = !prefersReducedMotionRef.current && isActiveRef.current;
     controls.autoRotateSpeed = 0.8;
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
 
-    const handleStart = () => setIsInteracting(true);
+    const handleStart = () => {
+      if (cameraTransitionAnimIdRef.current) {
+        cancelAnimationFrame(cameraTransitionAnimIdRef.current);
+        cameraTransitionAnimIdRef.current = null;
+      }
+      setIsInteracting(true);
+    };
     const handleEnd = () => setIsInteracting(false);
     controls.addEventListener('start', handleStart);
     controls.addEventListener('end', handleEnd);
     controlsRef.current = controls;
+
+    // WebGL Context Loss Recovery
+    const handleContextLost = (e) => {
+      e.preventDefault();
+      console.warn('[StudioConfigurator] WebGL context lost.');
+    };
+    const handleContextRestored = () => {
+      console.log('[StudioConfigurator] WebGL context restored.');
+    };
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
 
     // 7. Load 3D Defender GLB Model
     const loader = new GLTFLoader();
@@ -357,7 +388,7 @@ export default function StudioConfigurator({
         // Extract and configure car body paint materials
         const paintMats = [];
         const currentSpec = DEFENDER_PALETTE.find((s) => s.id === selectedPresetIdRef.current) || {};
-        const initialThreeColor = new THREE.Color(currentColorRef.current);
+        const initialThreeColor = parseSafeColor(currentColorRef.current);
 
         model.traverse((child) => {
           if (child.isMesh && child.material) {
@@ -409,18 +440,19 @@ export default function StudioConfigurator({
 
     // 9. Resize Observer
     const handleResize = () => {
-      if (!container || !cameraRef.current || !rendererRef.current) return;
-      const w = container.clientWidth || 800;
-      const h = container.clientHeight || 500;
+      const stage = stageContainerRef.current || canvas.parentElement;
+      if (!stage || !cameraRef.current || !rendererRef.current) return;
+      const w = stage.clientWidth || 800;
+      const h = stage.clientHeight || 500;
       cameraRef.current.aspect = w / h;
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(w, h);
     };
 
     let resizeObserver = null;
-    if (typeof ResizeObserver !== 'undefined' && container) {
+    if (typeof ResizeObserver !== 'undefined' && stage) {
       resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(container);
+      resizeObserver.observe(stage);
     }
     window.addEventListener('resize', handleResize);
 
@@ -434,10 +466,16 @@ export default function StudioConfigurator({
         cancelAnimationFrame(colorAnimIdRef.current);
         colorAnimIdRef.current = null;
       }
+      if (cameraTransitionAnimIdRef.current) {
+        cancelAnimationFrame(cameraTransitionAnimIdRef.current);
+        cameraTransitionAnimIdRef.current = null;
+      }
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
       window.removeEventListener('resize', handleResize);
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
 
       if (controlsRef.current) {
         controlsRef.current.removeEventListener('start', handleStart);
@@ -513,30 +551,64 @@ export default function StudioConfigurator({
     }
   };
 
-  const handleCycleCameraView = useCallback(() => {
+  const transitionCameraTo = useCallback((destPos, destTarget) => {
     if (!cameraRef.current || !controlsRef.current) return;
-    const views = [
-      { pos: [4.2, 1.8, 4.6], target: [0, 0.85, 0], label: '3/4 FRONT ANGLE' },
-      { pos: [0, 1.6, 5.6], target: [0, 0.85, 0], label: 'FRONT HEADLINE' },
-      { pos: [-5.4, 1.6, 0], target: [0, 0.85, 0], label: 'SIDE PROFILE' },
-      { pos: [-4.0, 1.8, -4.6], target: [0, 0.85, 0], label: 'REAR EXPEDITION' },
-      { pos: [0.1, 5.8, 2.2], target: [0, 0.85, 0], label: 'OVERHEAD AERIAL' }
-    ];
-    const nextIndex = (cameraAngleIndex + 1) % views.length;
+
+    if (cameraTransitionAnimIdRef.current) {
+      cancelAnimationFrame(cameraTransitionAnimIdRef.current);
+      cameraTransitionAnimIdRef.current = null;
+    }
+
+    if (prefersReducedMotionRef.current) {
+      cameraRef.current.position.set(destPos[0], destPos[1], destPos[2]);
+      controlsRef.current.target.set(destTarget[0], destTarget[1], destTarget[2]);
+      controlsRef.current.update();
+      return;
+    }
+
+    const startPos = cameraRef.current.position.clone();
+    const endPos = new THREE.Vector3(destPos[0], destPos[1], destPos[2]);
+    const startTarget = controlsRef.current.target.clone();
+    const endTarget = new THREE.Vector3(destTarget[0], destTarget[1], destTarget[2]);
+
+    const duration = 500;
+    const startTime = performance.now();
+
+    const animateCamera = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // Cubic ease out
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      cameraRef.current.position.lerpVectors(startPos, endPos, ease);
+      controlsRef.current.target.lerpVectors(startTarget, endTarget, ease);
+      controlsRef.current.update();
+
+      if (progress < 1) {
+        cameraTransitionAnimIdRef.current = requestAnimationFrame(animateCamera);
+      } else {
+        cameraRef.current.position.copy(endPos);
+        controlsRef.current.target.copy(endTarget);
+        controlsRef.current.update();
+        cameraTransitionAnimIdRef.current = null;
+      }
+    };
+
+    cameraTransitionAnimIdRef.current = requestAnimationFrame(animateCamera);
+  }, []);
+
+  const handleCycleCameraView = useCallback(() => {
+    const nextIndex = (cameraAngleIndex + 1) % CAMERA_VIEWPOINTS.length;
     setCameraAngleIndex(nextIndex);
-    const v = views[nextIndex];
-    cameraRef.current.position.set(v.pos[0], v.pos[1], v.pos[2]);
-    controlsRef.current.target.set(v.target[0], v.target[1], v.target[2]);
-    controlsRef.current.update();
-  }, [cameraAngleIndex]);
+    const v = CAMERA_VIEWPOINTS[nextIndex];
+    transitionCameraTo(v.pos, v.target);
+  }, [cameraAngleIndex, transitionCameraTo]);
 
   const handleResetCamera = useCallback(() => {
-    if (!cameraRef.current || !controlsRef.current) return;
     setCameraAngleIndex(0);
-    cameraRef.current.position.set(4.2, 1.8, 4.6);
-    controlsRef.current.target.set(0, 0.85, 0);
-    controlsRef.current.update();
-  }, []);
+    const v = CAMERA_VIEWPOINTS[0];
+    transitionCameraTo(v.pos, v.target);
+  }, [transitionCameraTo]);
 
   const currentSwatchInfo = DEFENDER_PALETTE.find((s) => s.id === selectedPresetId) || {
     id: 'custom',
@@ -562,6 +634,8 @@ export default function StudioConfigurator({
     >
       {/* Studio Turntable Stage Visual Canvas */}
       <div
+        ref={stageContainerRef}
+        className="studio-turntable-stage"
         style={{
           position: 'relative',
           width: '100%',
@@ -780,15 +854,15 @@ export default function StudioConfigurator({
           </div>
         )}
 
-        {/* Studio Top Control & HUD Badges */}
+        {/* Studio Top Paintwork Telemetry HUD Badge */}
         <div
           style={{
             position: 'absolute',
-            top: '20px',
-            left: '20px',
+            top: '24px',
+            left: '24px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: '6px',
             zIndex: 15,
             pointerEvents: 'none'
           }}
@@ -848,7 +922,11 @@ export default function StudioConfigurator({
             }}
           >
             <Sparkles size={11} color="var(--color-giallo-vivo)" />
-            <span>SOLIHULL STUDIO SPECIFICATION · 2D BESPOKE COLOR CONFIGURATOR</span>
+            <span>
+              {is3DReady
+                ? 'SOLIHULL STUDIO SPECIFICATION · 3D REAL-TIME CONFIGURATOR'
+                : 'SOLIHULL STUDIO SPECIFICATION · 2D BESPOKE COLOR CONFIGURATOR'}
+            </span>
           </div>
 
           {/* 3D Orbit & Camera Switcher Controls */}

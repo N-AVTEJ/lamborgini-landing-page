@@ -6,7 +6,7 @@ import path from 'path';
 import * as THREE from 'three';
 import StudioConfigurator from '../components/StudioConfigurator';
 import ShowroomSpotlightStage from '../components/ShowroomSpotlightStage';
-import { DEFENDER_PALETTE, applyDefender3DPaint } from '../utils/defenderStudioConfig';
+import { DEFENDER_PALETTE, applyDefender3DPaint, parseSafeColor } from '../utils/defenderStudioConfig';
 
 describe('Defender 3D Studio Configurator Integration Suite', () => {
   describe('1. Model Asset Integrity', () => {
@@ -115,6 +115,15 @@ describe('Defender 3D Studio Configurator Integration Suite', () => {
       expect(mockMat1.metalness).toBe(0.55);
       expect(mockMat1.roughness).toBe(0.22);
     });
+
+    it('gracefully handles malformed or invalid hex color strings with parseSafeColor fallback', () => {
+      const defaultHex = 'ffc000';
+      expect(parseSafeColor('').getHexString()).toBe(defaultHex);
+      expect(parseSafeColor(null).getHexString()).toBe(defaultHex);
+      expect(parseSafeColor('invalid-color').getHexString()).toBe(defaultHex);
+      expect(parseSafeColor('#').getHexString()).toBe(defaultHex);
+      expect(parseSafeColor('#2e434f').getHexString()).toBe('2e434f');
+    });
   });
 
   describe('4. Showroom Spotlight Stage Perspective Integration', () => {
@@ -140,6 +149,12 @@ describe('Defender 3D Studio Configurator Integration Suite', () => {
       fireEvent.click(tasmanBtn);
 
       expect(screen.getByText('EXPEDITION OCEANIC METALLIC')).toBeInTheDocument();
+    });
+
+    it('renders with reduced motion awareness without throwing exceptions', () => {
+      const { container } = render(<StudioConfigurator forceReducedMotion={true} />);
+      expect(container.querySelector('canvas.studio-3d-canvas')).toBeInTheDocument();
+      expect(container.querySelector('.studio-turntable-poster')).toBeInTheDocument();
     });
   });
 });

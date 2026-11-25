@@ -18,11 +18,11 @@ async function capture() {
   console.log('Navigating to http://localhost:5174/ ...');
   await page.goto('http://localhost:5174/', { waitUntil: 'networkidle' });
 
-  // Scroll to Showroom Stage
-  console.log('Scrolling to #showroom-spotlight...');
+  // Scroll to Showroom Studio Configurator Stage (Centered in Viewport)
+  console.log('Scrolling to studio configurator...');
   await page.evaluate(() => {
-    const el = document.getElementById('showroom-spotlight');
-    if (el) el.scrollIntoView({ behavior: 'instant' });
+    const stage = document.querySelector('.shared-staging-canvas') || document.getElementById('showroom-spotlight');
+    if (stage) stage.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
   await page.waitForTimeout(1000);
 
@@ -43,39 +43,88 @@ async function capture() {
     fs.mkdirSync('recordings', { recursive: true });
   }
 
+  // Target the Showroom Spotlight Stage for comprehensive high-res capture
+  const stage = page.locator('#showroom-spotlight');
+
   // 1. Initial Giallo Vivo
   console.log('Capturing Giallo Vivo...');
-  await page.screenshot({ path: 'recordings/3d-studio-giallo-vivo.png' });
+  await stage.screenshot({ path: 'recordings/3d-studio-giallo-vivo.png' });
 
   // 2. Select PANGEA GREEN
   console.log('Selecting Pangea Green...');
   const pangeaBtn = page.getByRole('button', { name: /Select PANGEA GREEN/i });
   await pangeaBtn.click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: 'recordings/3d-studio-pangea-green.png' });
+  await stage.screenshot({ path: 'recordings/3d-studio-pangea-green.png' });
 
   // 3. Select TASMAN BLUE
   console.log('Selecting Tasman Blue...');
   const tasmanBtn = page.getByRole('button', { name: /Select TASMAN BLUE/i });
   await tasmanBtn.click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: 'recordings/3d-studio-tasman-blue.png' });
+  await stage.screenshot({ path: 'recordings/3d-studio-tasman-blue.png' });
 
   // 4. Select CARPATHIAN GREY
   console.log('Selecting Carpathian Grey...');
   const carpathianBtn = page.getByRole('button', { name: /Select CARPATHIAN GREY/i });
   await carpathianBtn.click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: 'recordings/3d-studio-carpathian-grey.png' });
+  await stage.screenshot({ path: 'recordings/3d-studio-carpathian-grey.png' });
 
   // 5. Select FUJI WHITE
   console.log('Selecting Fuji White...');
   const fujiBtn = page.getByRole('button', { name: /Select FUJI WHITE/i });
   await fujiBtn.click();
   await page.waitForTimeout(600);
-  await page.screenshot({ path: 'recordings/3d-studio-fuji-white.png' });
+  await stage.screenshot({ path: 'recordings/3d-studio-fuji-white.png' });
 
-  console.log('All screenshots captured successfully!');
+  // 6. Test Bespoke Custom Hex
+  console.log('Selecting Custom SVO Bespoke Hex (#ff3300)...');
+  await page.evaluate(() => {
+    const input = document.querySelector('input[type="color"]');
+    if (input) {
+      input.value = '#ff3300';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: 'recordings/3d-studio-custom-red.png' });
+
+  // 7. Reset to Giallo Vivo and Cycle Camera Angles
+  console.log('Resetting to Giallo Vivo and Cycling Viewpoints...');
+  const gialloBtn = page.getByRole('button', { name: /Select GIALLO VIVO/i });
+  await gialloBtn.click();
+  await page.waitForTimeout(500);
+
+  const viewBtn = page.getByRole('button', { name: /Cycle 3D camera angles/i });
+
+  // View 2: Front Headline
+  await viewBtn.click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'recordings/3d-view-02-front.png' });
+
+  // View 3: Side Profile
+  await viewBtn.click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'recordings/3d-view-03-side.png' });
+
+  // View 4: Rear Expedition
+  await viewBtn.click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'recordings/3d-view-04-rear.png' });
+
+  // View 5: Overhead Aerial
+  await viewBtn.click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'recordings/3d-view-05-aerial.png' });
+
+  // Reset Camera View
+  const resetBtn = page.getByRole('button', { name: /Reset 3D camera to default angle/i });
+  await resetBtn.click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'recordings/3d-view-01-hero-reset.png' });
+
+  console.log('All screenshots and viewpoints captured successfully!');
   await browser.close();
 }
 

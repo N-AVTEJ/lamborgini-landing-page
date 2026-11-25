@@ -8,10 +8,25 @@ export const DEFENDER_PALETTE = [
   { id: 'fuji-white', name: 'FUJI WHITE', hex: '#f0f2f3', badge: 'HIGH-CONTRAST ARCTIC SPEC', metalness: 0.20, roughness: 0.18 }
 ];
 
+export function parseSafeColor(hex, fallback = '#ffc000') {
+  if (!hex || typeof hex !== 'string') return new THREE.Color(fallback);
+  const trimmed = hex.trim();
+  const hexRegex = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+  if (!hexRegex.test(trimmed)) {
+    return new THREE.Color(fallback);
+  }
+  try {
+    const formatted = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+    return new THREE.Color(formatted);
+  } catch {
+    return new THREE.Color(fallback);
+  }
+}
+
 export function applyDefender3DPaint(materials, hex, presetId) {
   if (!materials || !materials.length) return;
   const spec = DEFENDER_PALETTE.find((s) => s.id === presetId) || {};
-  const targetColor = new THREE.Color(hex);
+  const targetColor = parseSafeColor(hex);
   const targetMetalness = spec.metalness ?? 0.55;
   const targetRoughness = spec.roughness ?? 0.22;
 
