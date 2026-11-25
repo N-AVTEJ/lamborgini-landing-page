@@ -80,13 +80,8 @@ async function capture() {
 
   // 6. Test Bespoke Custom Hex
   console.log('Selecting Custom SVO Bespoke Hex (#ff3300)...');
-  await page.evaluate(() => {
-    const input = document.querySelector('input[type="color"]');
-    if (input) {
-      input.value = '#ff3300';
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  });
+  const colorInput = page.locator('input[type="color"]');
+  await colorInput.fill('#ff3300');
   await page.waitForTimeout(600);
   await page.screenshot({ path: 'recordings/3d-studio-custom-red.png' });
 
