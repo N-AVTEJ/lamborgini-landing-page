@@ -14,26 +14,27 @@ async function testViews() {
   await page.waitForTimeout(1000);
 
   const viewBtn = page.getByRole('button', { name: 'Cycle 3D camera angles' });
+  const stage = page.locator('#showroom-spotlight');
 
   // 1. Click View Angle -> Front Headline
   await viewBtn.click();
   await page.waitForTimeout(700);
-  await page.screenshot({ path: 'recordings/3d-view-02-front.png' });
+  await stage.screenshot({ path: 'recordings/3d-view-02-front.png' });
 
   // 2. Click View Angle -> Side Profile
   await viewBtn.click();
   await page.waitForTimeout(700);
-  await page.screenshot({ path: 'recordings/3d-view-03-side.png' });
+  await stage.screenshot({ path: 'recordings/3d-view-03-side.png' });
 
   // 3. Click View Angle -> Rear Expedition
   await viewBtn.click();
   await page.waitForTimeout(700);
-  await page.screenshot({ path: 'recordings/3d-view-04-rear.png' });
+  await stage.screenshot({ path: 'recordings/3d-view-04-rear.png' });
 
   // 4. Click View Angle -> Overhead Aerial
   await viewBtn.click();
   await page.waitForTimeout(700);
-  await page.screenshot({ path: 'recordings/3d-view-05-aerial.png' });
+  await stage.screenshot({ path: 'recordings/3d-view-05-aerial.png' });
 
   console.log('All camera view angles captured!');
   await browser.close();
